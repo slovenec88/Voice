@@ -35,12 +35,13 @@ import voice.core.audiobookshelf.account.AccountStore
 import voice.core.audiobookshelf.download.AudiobookshelfDownloads
 import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.data.BookId
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookContentRepo
 import voice.core.data.repo.BookRepository
 import voice.core.data.store.CurrentBookStore
 import voice.core.logging.api.Logger
 import voice.core.playback.playstate.PlayStateManager
+import voice.core.server.ServerConnectionGate
 
 private val MIN_SYNC_INTERVAL = 1.minutes
 
@@ -64,6 +65,7 @@ internal constructor(
   private val playStateManager: PlayStateManager,
   private val currentBookStore: CurrentBookStore,
   private val context: Context,
+  private val gate: ServerConnectionGate,
 ) {
 
   // a sync must never take the app down, whatever the server answers
@@ -124,6 +126,7 @@ internal constructor(
         try {
           do {
             resyncRequested = false
+            if (gate.provider.value != "abs") break
             val account = accountStore.data.first()?.takeUnless { it.needsLogin } ?: break
             syncNow(account)
           } while (resyncRequested)
@@ -142,10 +145,10 @@ internal constructor(
   // the books of a server stay hidden while signed out, for example after a restore from a backup
   // without the login
   private suspend fun hideBooksWithoutAccount() {
-    if (accountStore.data.first() != null) return
+    if (accountStore.data.first() != null && gate.provider.value == "abs") return
     contentRepo
       .all()
-      .filter { it.isActive && it.id.isRemote }
+      .filter { it.isActive && it.id.isAudiobookshelf }
       .forEach { contentRepo.put(it.copy(isActive = false)) }
   }
 
@@ -180,7 +183,7 @@ internal constructor(
       bookRepository
         .flow()
         .map { books ->
-          books.filter { it.id.isRemote }.associate { it.id to it.position }
+          books.filter { it.id.isAudiobookshelf }.associate { it.id to it.position }
         }
         .distinctUntilChanged()
         // while playing the position changes all the time and the listening session sends it
@@ -200,7 +203,7 @@ internal constructor(
             positions.keys.filter { it in before && before[it] != positions[it] && it != playing }
           val pushed = mutableSetOf<BookId>()
           val account = accountStore.data.first()?.takeUnless { it.needsLogin }
-          if (account != null) {
+          if (account != null && gate.provider.value == "abs") {
             for (bookId in moved) {
               if (!progressSync.push(account, bookId)) break
               pushed += bookId

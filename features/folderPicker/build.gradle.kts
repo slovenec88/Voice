@@ -10,6 +10,7 @@ dependencies {
   implementation(projects.core.kioskmode)
   implementation(projects.core.analytics.api)
   implementation(projects.core.audiobookshelf.api)
+  implementation(projects.core.bookorbit.api)
 
   implementation(libs.coil)
   implementation(libs.documentFile)

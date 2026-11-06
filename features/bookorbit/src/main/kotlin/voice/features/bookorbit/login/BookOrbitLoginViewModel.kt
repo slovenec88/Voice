@@ -1,0 +1,233 @@
+package voice.features.bookorbit.login
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import voice.core.bookorbit.BookOrbit
+import voice.core.bookorbit.BookOrbitServer
+import voice.core.bookorbit.CloudflareAccess
+import voice.core.bookorbit.FindServerResult
+import voice.core.bookorbit.LoginResult
+import voice.core.bookorbit.PendingLogin
+import voice.core.common.DispatcherProvider
+import voice.core.common.MainScope
+import voice.navigation.Destination
+import voice.navigation.Navigator
+import voice.navigation.Origin
+
+@AssistedInject
+class BookOrbitLoginViewModel(
+  private val bookorbit: BookOrbit,
+  private val navigator: Navigator,
+  dispatcherProvider: DispatcherProvider,
+  @Assisted private val origin: Origin,
+  @Assisted private val renew: Boolean,
+) {
+
+  private val scope = MainScope(dispatcherProvider)
+
+  private var server: BookOrbitServer? = null
+  private var login: PendingLogin? = null
+  private var knownUsername = ""
+  private var addressStep = BookOrbitLoginViewState.Address()
+
+  // the request of the step on screen. Going back cancels it, so its answer can't take over another
+  // step.
+  private var request: Job? = null
+
+  internal var state: BookOrbitLoginViewState by mutableStateOf(BookOrbitLoginViewState.Address())
+    private set
+
+  init {
+    if (renew) {
+      scope.launch {
+        val connection = bookorbit.connection.first() ?: return@launch
+        knownUsername = connection.username
+        state =
+          BookOrbitLoginViewState.Address(
+            address = connection.serverUrl,
+            cloudflareAccess =
+              bookorbit.savedCloudflareAccess(connection.serverUrl) ?: CloudflareAccess(),
+          )
+      }
+    }
+  }
+
+  internal fun onAddressChange(address: String) {
+    val current = state as? BookOrbitLoginViewState.Address ?: return
+    state =
+      current.copy(
+        address = address,
+        error = null,
+        cloudflareAccess =
+          if (renew && address != current.address) {
+            current.cloudflareAccess?.let { CloudflareAccess() }
+          } else {
+            current.cloudflareAccess
+          },
+      )
+  }
+
+  internal fun onCloudflareAccessChange(access: CloudflareAccess?) {
+    val current = state as? BookOrbitLoginViewState.Address ?: return
+    state = current.copy(cloudflareAccess = access, error = null)
+  }
+
+  internal fun onFindServer() {
+    val current = state as? BookOrbitLoginViewState.Address ?: return
+    if (current.busy || current.address.isBlank()) return
+    state = current.copy(busy = true, error = null)
+    request = scope.launch {
+      val access =
+        current.serviceToken?.let { CloudflareAccess(it.clientId.trim(), it.clientSecret.trim()) }
+      when (val result = bookorbit.findServer(current.address, access)) {
+        is FindServerResult.Found -> {
+          server = result.server
+          addressStep = current.copy(error = null)
+          state =
+            BookOrbitLoginViewState.Credentials(
+              serverName = current.address.trim().removeSuffix("/"),
+              username = knownUsername,
+              passwordLogin = result.server.passwordLogin,
+            )
+        }
+        FindServerResult.NotFound -> state = current.copy(error = AddressError.NotFound)
+        FindServerResult.CertificateNotTrusted ->
+          state = current.copy(error = AddressError.CertificateNotTrusted)
+        FindServerResult.CloudflareAccessFailed ->
+          state = current.copy(error = AddressError.CloudflareAccessFailed)
+        FindServerResult.NotSetUp -> state = current.copy(error = AddressError.NotSetUp)
+        is FindServerResult.TooOld ->
+          state = current.copy(error = AddressError.TooOld(result.version))
+      }
+    }
+  }
+
+  internal fun onUsernameChange(username: String) {
+    val current = state as? BookOrbitLoginViewState.Credentials ?: return
+    state = current.copy(username = username, error = null)
+  }
+
+  internal fun onPasswordChange(password: String) {
+    val current = state as? BookOrbitLoginViewState.Credentials ?: return
+    state = current.copy(password = password, error = null)
+  }
+
+  internal fun onLogin() {
+    val current = state as? BookOrbitLoginViewState.Credentials ?: return
+    val server = server ?: return
+    if (current.busy || current.username.isBlank()) return
+    state = current.copy(busy = true, error = null)
+    request = scope.launch {
+      when (val result = bookorbit.login(server, current.username, current.password)) {
+        is LoginResult.Success -> {
+          login = result.login
+          if (renew) {
+            if (bookorbit.renewLogin(result.login)) {
+              navigator.goBack()
+            } else {
+              state = current.copy(error = CredentialsError.OtherAccount)
+            }
+          } else {
+            showLibraries(result.login, current.serverName)
+          }
+        }
+        LoginResult.WrongCredentials ->
+          state = current.copy(error = CredentialsError.WrongCredentials)
+        LoginResult.Unreachable -> state = current.copy(error = CredentialsError.Unreachable)
+        LoginResult.Failed -> state = current.copy(error = CredentialsError.Failed)
+      }
+    }
+  }
+
+  private suspend fun showLibraries(
+    login: PendingLogin,
+    serverName: String,
+  ) {
+    state = BookOrbitLoginViewState.Libraries(serverName = serverName, loading = true)
+    val preview = bookorbit.preview(login)
+    state =
+      BookOrbitLoginViewState.Libraries(
+        serverName = serverName,
+        loading = false,
+        failed = preview == null,
+        libraries =
+          preview?.libraries.orEmpty().map { library ->
+            LibraryViewState(
+              id = library.id,
+              name = library.name,
+              bookCount = library.bookCount,
+              selected = true,
+            )
+          },
+        covers = preview?.covers.orEmpty(),
+      )
+  }
+
+  internal fun onRetryLibraries() {
+    val current = state as? BookOrbitLoginViewState.Libraries ?: return
+    val login = login ?: return
+    request = scope.launch {
+      showLibraries(login, current.serverName)
+    }
+  }
+
+  internal fun onLibraryToggle(id: String) {
+    val current = state as? BookOrbitLoginViewState.Libraries ?: return
+    state =
+      current.copy(
+        libraries =
+          current.libraries.map {
+            if (it.id == id) it.copy(selected = !it.selected) else it
+          },
+      )
+  }
+
+  internal fun onConnect() {
+    val current = state as? BookOrbitLoginViewState.Libraries ?: return
+    val login = login ?: return
+    if (current.busy) return
+    state = current.copy(busy = true)
+    scope.launch {
+      if (!bookorbit.connect(login, current.libraries.filter { it.selected }.map { it.id })) {
+        state = current.copy(busy = false, blockedByOtherProvider = true)
+        return@launch
+      }
+      when (origin) {
+        Origin.Default -> navigator.setRoot(Destination.BookOverview)
+        Origin.Onboarding -> navigator.goTo(Destination.OnboardingCompletion)
+      }
+    }
+  }
+
+  internal fun onBack() {
+    request?.cancel()
+    state =
+      when (val current = state) {
+        is BookOrbitLoginViewState.Address -> {
+          navigator.goBack()
+          return
+        }
+        is BookOrbitLoginViewState.Credentials -> addressStep
+        is BookOrbitLoginViewState.Libraries ->
+          BookOrbitLoginViewState.Credentials(
+            serverName = current.serverName,
+            passwordLogin = server?.passwordLogin ?: true,
+          )
+      }
+  }
+
+  @AssistedFactory
+  interface Factory {
+    fun create(
+      origin: Origin,
+      renew: Boolean,
+    ): BookOrbitLoginViewModel
+  }
+}

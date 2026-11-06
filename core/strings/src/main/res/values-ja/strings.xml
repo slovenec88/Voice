@@ -474,4 +474,14 @@
     <string name="widget.shelf.play">%1$s を再生</string>
     <string name="widget.shelf.title">続きを聴く</string>
     <string name="widget.sleep_timer.stops_at">%1$s に停止します</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit に接続</string>
+    <string name="bookorbit.login.error.not_found">そのアドレスの BookOrbit サーバーに Voice から接続できません。正しいネットワークに接続していますか？</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit の更新が必要です。</string>
+    <string name="folder.add.action.bookorbit">BookOrbit に接続</string>
+    <string name="server.connection.other">先に %s からサインアウトしてください</string>
+    <string name="cloudflare.access.error">Cloudflare Access のトークンを確認し、最終的な HTTPS アドレスを使用してください。</string>
+    <string name="cloudflare.client.id">クライアント ID</string>
+    <string name="cloudflare.client.secret">クライアントシークレット</string>
+    <string name="bookorbit.status.connected">BookOrbit に接続済み</string>
 </resources>

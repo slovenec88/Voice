@@ -8,6 +8,8 @@ import kotlinx.coroutines.launch
 import voice.core.analytics.api.Analytics
 import voice.core.audiobookshelf.AudiobookshelfFeatureFlag
 import voice.core.audiobookshelf.ServerAccount
+import voice.core.bookorbit.BookOrbit
+import voice.core.bookorbit.BookOrbitFeatureFlag
 import voice.core.common.DispatcherProvider
 import voice.core.common.MainScope
 import voice.core.data.folders.AudiobookFolders
@@ -27,6 +29,8 @@ class AddContentViewModel(
   private val navigator: Navigator,
   private val audiobookshelfFeatureFlag: AudiobookshelfFeatureFlag,
   private val serverAccount: ServerAccount,
+  private val bookorbit: BookOrbit,
+  private val bookorbitFeatureFlag: BookOrbitFeatureFlag,
   private val analytics: Analytics,
   dispatcherProvider: DispatcherProvider,
   @Assisted private val origin: Origin,
@@ -62,6 +66,9 @@ class AddContentViewModel(
   internal val canConnectAudiobookshelf: Boolean
     get() = audiobookshelfFeatureFlag.get()
 
+  internal val canConnectBookOrbit: Boolean
+    get() = bookorbitFeatureFlag.get()
+
   internal fun onFolderPickerCancel() {
     analytics.event("folder_picker_cancelled")
   }
@@ -92,10 +99,22 @@ class AddContentViewModel(
   internal fun connectAudiobookshelf() {
     scope.launch {
       navigator.goTo(
-        if (serverAccount.isConnected()) {
-          Destination.AudiobookshelfSettings
-        } else {
-          Destination.AudiobookshelfLogin(origin)
+        when {
+          bookorbit.isConnected() -> Destination.BookOrbitSettings
+          serverAccount.isConnected() -> Destination.AudiobookshelfSettings
+          else -> Destination.AudiobookshelfLogin(origin)
+        },
+      )
+    }
+  }
+
+  internal fun connectBookOrbit() {
+    scope.launch {
+      navigator.goTo(
+        when {
+          serverAccount.isConnected() -> Destination.AudiobookshelfSettings
+          bookorbit.isConnected() -> Destination.BookOrbitSettings
+          else -> Destination.BookOrbitLogin(origin)
         },
       )
     }

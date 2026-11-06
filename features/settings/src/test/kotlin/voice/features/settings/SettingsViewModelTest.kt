@@ -5,6 +5,7 @@ import app.cash.molecule.RecompositionMode
 import app.cash.molecule.launchMolecule
 import app.cash.turbine.test
 import io.mockk.Runs
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -35,6 +36,7 @@ import kotlinx.coroutines.test.runTest
 import voice.core.analytics.api.AnalyticsConsentStore
 import voice.core.audiobookshelf.AudiobookshelfFeatureFlag
 import voice.core.audiobookshelf.ServerAccount
+import voice.core.bookorbit.BookOrbitFeatureFlag
 import voice.core.common.AppInfoProvider
 import voice.core.common.DispatcherProvider
 import voice.core.data.folders.AudiobookFolders
@@ -137,6 +139,12 @@ class SettingsViewModelTest {
       dispatcherProvider =
         DispatcherProvider(scope.coroutineContext, scope.coroutineContext, scope.coroutineContext),
       serverAccount = serverAccount,
+      bookorbit =
+        mockk {
+          every { connection } returns flowOf(null)
+          coEvery { isConnected() } returns false
+        },
+      bookorbitFeatureFlag = BookOrbitFeatureFlag(MemoryFeatureFlag(false)),
       audiobookshelfFeatureFlag = AudiobookshelfFeatureFlag(audiobookshelfFeatureFlag),
     )
 

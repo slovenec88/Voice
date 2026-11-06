@@ -31,6 +31,7 @@ import voice.core.data.Book
 import voice.core.data.Bookmark
 import voice.core.data.CustomMetadata
 import voice.core.data.repo.BookmarkRepo
+import voice.core.server.ServerConnectionGate
 
 class BookmarkSyncTest {
 
@@ -193,6 +194,11 @@ class BookmarkSyncTest {
         AudiobookshelfHttp(
           AccountStore(MemoryDataStore<Account?>(account)),
           mockk { every { versionName } returns "1.0.0" },
+          kotlinx.coroutines.runBlocking {
+            ServerConnectionGate().apply {
+              val _ = claim("abs")
+            }
+          },
         ),
       bookRepository = MemoryBookRepository(book),
       bookmarkRepo = bookmarkRepo,

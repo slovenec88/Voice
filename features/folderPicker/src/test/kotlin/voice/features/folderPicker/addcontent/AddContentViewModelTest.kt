@@ -50,6 +50,8 @@ class AddContentViewModelTest {
       navigator = navigator,
       audiobookshelfFeatureFlag = mockk(),
       serverAccount = mockk(),
+      bookorbit = mockk(),
+      bookorbitFeatureFlag = mockk(),
       analytics = analytics,
       dispatcherProvider = DispatcherProvider(coroutineContext, coroutineContext, coroutineContext),
       origin = Origin.Onboarding,

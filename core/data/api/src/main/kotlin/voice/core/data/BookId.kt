@@ -23,9 +23,17 @@ public data class BookId(val value: String) {
 /** The scheme of books that live on an Audiobookshelf server instead of the device. */
 public const val AUDIOBOOKSHELF_SCHEME: String = "abs"
 
+public const val BOOKORBIT_SCHEME: String = "bo"
+
+public val BookId.isAudiobookshelf: Boolean
+  get() = value.startsWith("$AUDIOBOOKSHELF_SCHEME:")
+
+public val BookId.isBookOrbit: Boolean
+  get() = value.startsWith("$BOOKORBIT_SCHEME:")
+
 /** Whether the book is streamed from a server rather than found on the device by the scanner. */
 public val BookId.isRemote: Boolean
-  get() = value.startsWith("$AUDIOBOOKSHELF_SCHEME:")
+  get() = isAudiobookshelf || isBookOrbit
 
 public object BookIdSerializer : KSerializer<BookId> {
 

@@ -10,6 +10,7 @@ data class LivePlaybackState(
   val positionMs: Long,
   val isPlaying: Boolean,
   val playbackSpeed: Float,
+  val isAdvancing: Boolean = isPlaying,
 )
 
 fun Book.overlay(livePlaybackState: LivePlaybackState): Book {

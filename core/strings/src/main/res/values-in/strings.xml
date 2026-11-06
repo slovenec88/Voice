@@ -474,4 +474,14 @@
     <string name="widget.shelf.play">Putar %1$s</string>
     <string name="widget.shelf.title">Lanjutkan mendengarkan</string>
     <string name="widget.sleep_timer.stops_at">Berhenti pukul %1$s</string>
+
+    <string name="bookorbit.login.address.title">Hubungkan BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice tidak dapat menjangkau server BookOrbit di alamat itu. Apakah Anda terhubung ke jaringan yang tepat?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit perlu diperbarui.</string>
+    <string name="folder.add.action.bookorbit">Hubungkan BookOrbit</string>
+    <string name="server.connection.other">Keluar dari %s terlebih dahulu</string>
+    <string name="cloudflare.access.error">Periksa token Cloudflare Access dan gunakan alamat HTTPS akhir.</string>
+    <string name="cloudflare.client.id">ID klien</string>
+    <string name="cloudflare.client.secret">Rahasia klien</string>
+    <string name="bookorbit.status.connected">Terhubung ke BookOrbit</string>
 </resources>

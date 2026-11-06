@@ -21,7 +21,7 @@ import voice.core.data.Book
 import voice.core.data.BookContent
 import voice.core.data.Chapter
 import voice.core.data.CustomMetadata
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookContentRepo
 import voice.core.data.repo.BookmarkRepo
 import voice.core.data.repo.ChapterRepo
@@ -52,7 +52,7 @@ internal class LibrarySync(
     val flagged =
       books.filter { it.isMissing || it.isInvalid }.map { AudiobookshelfIds.bookId(it.id) }.toSet()
 
-    val stored = contentRepo.all().filter { it.id.isRemote }.associateBy { it.id }
+    val stored = contentRepo.all().filter { it.id.isAudiobookshelf }.associateBy { it.id }
 
     val changed = items.filter { item ->
       val content = stored[AudiobookshelfIds.bookId(item.id)] ?: return@filter true
@@ -82,7 +82,7 @@ internal class LibrarySync(
     val onServer = items.map { AudiobookshelfIds.bookId(it.id) }.toSet()
     contentRepo
       .all()
-      .filter { it.id.isRemote }
+      .filter { it.id.isAudiobookshelf }
       .forEach { content ->
         if (content.id in flagged) return@forEach
         val active = content.id in onServer
@@ -168,7 +168,7 @@ internal class LibrarySync(
     val itemsById = items.associateBy { it.id }
     contentRepo
       .all()
-      .filter { it.id.isRemote && it.isActive && it.metadata.cover?.exists() != true }
+      .filter { it.id.isAudiobookshelf && it.isActive && it.metadata.cover?.exists() != true }
       .forEach { content ->
         val item = content.id.itemId?.let(itemsById::get) ?: return@forEach
         if (item.media.coverPath == null) return@forEach

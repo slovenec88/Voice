@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -19,10 +20,11 @@ import voice.core.audiobookshelf.login.LibrariesPreviews
 import voice.core.audiobookshelf.login.serverName
 import voice.core.audiobookshelf.sync.AudiobookshelfSync
 import voice.core.audiobookshelf.sync.ProgressSync
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookContentRepo
 import voice.core.data.store.CurrentBookStore
 import voice.core.playback.PlayerController
+import voice.core.server.ServerConnectionGate
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
@@ -39,14 +41,18 @@ internal constructor(
   private val currentBookStore: CurrentBookStore,
   private val playerController: PlayerController,
   private val analytics: Analytics,
+  private val gate: ServerConnectionGate,
 ) : ServerAccount {
 
   override val connection: Flow<AudiobookshelfConnection?> =
-    accountStore.data.map { it?.toConnection() }.distinctUntilChanged()
+    combine(accountStore.data, gate.provider) { account, provider ->
+        account?.takeIf { provider == "abs" }?.toConnection()
+      }
+      .distinctUntilChanged()
 
   override val serverName: Flow<String?> = connection.map { it?.serverName }.distinctUntilChanged()
 
-  override suspend fun isConnected(): Boolean = accountStore.data.first() != null
+  override suspend fun isConnected(): Boolean = connection.first() != null
 
   override suspend fun libraries(): LibrariesPreview? {
     val account = accountStore.data.first() ?: return null
@@ -65,15 +71,16 @@ internal constructor(
     // books back
     accountStore.updateData { null }
     sync.cancel()
-    if (currentBookStore.data.first()?.isRemote == true) {
+    if (currentBookStore.data.first()?.isAudiobookshelf == true) {
       playerController.pause()
       currentBookStore.updateData { null }
     }
     downloads.removeAll()
-    val remoteBooks = contentRepo.all().filter { it.id.isRemote }
+    val remoteBooks = contentRepo.all().filter { it.id.isAudiobookshelf }
     remoteBooks.forEach { contentRepo.put(it.copy(isActive = false)) }
     progressSync.forget(remoteBooks.map { it.id }.toSet())
     sync.onSignedOut()
+    gate.release("abs")
     // last, as a server that can't be reached takes a while to answer
     try {
       @Suppress("RETURN_VALUE_NOT_USED") http.api(account.serverUrl).logout(account.refreshToken)

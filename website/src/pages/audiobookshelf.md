@@ -22,6 +22,8 @@ There is no Voice account and no Voice server in between. Voice only talks to yo
 
 Voice needs Audiobookshelf 2.26 or newer.
 
+Voice can also connect to [BookOrbit](/bookorbit/). Voice connects to one audiobook server at a time.
+
 ## Listening
 
 - **Streaming**: Tap a book and it plays from the server.

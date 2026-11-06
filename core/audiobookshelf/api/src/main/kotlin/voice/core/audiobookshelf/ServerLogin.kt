@@ -22,7 +22,7 @@ interface ServerLogin {
   suspend fun connect(
     login: PendingLogin,
     libraryIds: List<String>,
-  )
+  ): Boolean
 
   /**
    * Signs in again after the server declined the stored login. Returns false for another account,

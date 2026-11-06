@@ -1,0 +1,287 @@
+package voice.core.bookorbit.sync
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.os.SystemClock
+import androidx.core.content.getSystemService
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import java.io.IOException
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerializationException
+import retrofit2.HttpException
+import voice.core.audiobookshelf.ServerReachability
+import voice.core.bookorbit.account.Account
+import voice.core.bookorbit.account.AccountStore
+import voice.core.bookorbit.download.BookOrbitDownloads
+import voice.core.bookorbit.http.BookOrbitHttp
+import voice.core.data.BookId
+import voice.core.data.isBookOrbit
+import voice.core.data.repo.BookContentRepo
+import voice.core.data.repo.BookRepository
+import voice.core.data.store.CurrentBookStore
+import voice.core.logging.api.Logger
+import voice.core.playback.playstate.PlayStateManager
+import voice.core.server.ServerConnectionGate
+
+private val MIN_SYNC_INTERVAL = 1.minutes
+
+/**
+ * Runs the syncs with the server: the whole library when the app starts, when the library opens and
+ * when the device gets back online, and the position of a book shortly after it changed here.
+ */
+@SingleIn(AppScope::class)
+@Inject
+public class BookOrbitSync
+internal constructor(
+  private val accountStore: AccountStore,
+  private val http: BookOrbitHttp,
+  private val librarySync: LibrarySync,
+  private val progressSync: ProgressSync,
+  private val bookmarkSync: BookmarkSync,
+  private val downloads: BookOrbitDownloads,
+  private val listeningSessionReporter: ListeningSessionReporter,
+  private val bookRepository: BookRepository,
+  private val contentRepo: BookContentRepo,
+  private val playStateManager: PlayStateManager,
+  private val currentBookStore: CurrentBookStore,
+  private val context: Context,
+  private val connectionGate: ServerConnectionGate,
+) {
+
+  // a sync must never take the app down, whatever the server answers
+  private val scope =
+    CoroutineScope(
+      SupervisorJob() +
+        Dispatchers.IO +
+        CoroutineExceptionHandler { _, throwable ->
+          Logger.w(throwable, "Syncing with the server failed")
+        },
+    )
+  private val mutex = Mutex()
+  private var syncJob: Job? = null
+  private var started = false
+  private var lastSyncAt: Long? = null
+
+  @Volatile private var resyncRequested = false
+  private var validatedNetwork: Network? = null
+
+  public val syncing: StateFlow<Boolean>
+    field = MutableStateFlow(false)
+
+  public val reachability: StateFlow<ServerReachability>
+    field = MutableStateFlow(ServerReachability.Unknown)
+
+  internal fun start() {
+    if (started) return
+    started = true
+    scope.launch { hideBooksWithoutAccount() }
+    listeningSessionReporter.start(scope)
+    pushLocalChanges()
+    syncWhenOnline()
+    sync(force = true)
+  }
+
+  /**
+   * Syncs the library with the server, unless a sync is already running. Without [force], a sync
+   * that finished less than a minute ago is enough.
+   */
+  // the network callback calls this from another thread
+  @Synchronized
+  public fun sync(force: Boolean = false) {
+    if (syncJob?.isActive == true) {
+      // the running sync may have read the account before it changed
+      if (force) resyncRequested = true
+      return
+    }
+    val last = lastSyncAt
+    if (
+      !force &&
+        last != null &&
+        SystemClock.elapsedRealtime() - last < MIN_SYNC_INTERVAL.inWholeMilliseconds
+    )
+      return
+    syncJob = scope.launch {
+      mutex.withLock {
+        syncing.value = true
+        try {
+          do {
+            resyncRequested = false
+            if (connectionGate.provider.value != "bo") break
+            val account = accountStore.data.first()?.takeUnless { it.needsLogin } ?: break
+            syncNow(account)
+          } while (resyncRequested)
+        } finally {
+          syncing.value = false
+        }
+      }
+    }
+  }
+
+  internal suspend fun cancel() {
+    resyncRequested = false
+    syncJob?.cancelAndJoin()
+  }
+
+  internal suspend fun beforeSignOut() {
+    listeningSessionReporter.checkpoint()
+  }
+
+  // the books of a server stay hidden while signed out, for example after a restore from a backup
+  // without the login
+  private suspend fun hideBooksWithoutAccount() {
+    if (accountStore.data.first() != null && connectionGate.provider.value == "bo") return
+    contentRepo
+      .all()
+      .filter { it.isActive && it.id.isBookOrbit }
+      .forEach { contentRepo.put(it.copy(isActive = false)) }
+  }
+
+  private suspend fun syncNow(account: Account) {
+    try {
+      val api = http.authenticatedApi(account)
+      val identityResponse = http.api(account.serverUrl, account.cloudflareAccess).identity()
+      if (!identityResponse.isSuccessful) {
+        if (account.cloudflareAccess != null) reachability.value = ServerReachability.Unreachable
+        throw HttpException(identityResponse)
+      }
+      val identity = identityResponse.body() ?: throw IOException("Missing server identity")
+      if (
+        identity.instanceId != account.instanceId ||
+          identity.product != "bookorbit" ||
+          identity.protocolVersion != 1
+      ) {
+        accountStore.updateData {
+          if (it?.sameOwner(account) == true) it.copy(needsLogin = true) else it
+        }
+        return
+      }
+      @Suppress("RETURN_VALUE_NOT_USED") api.me()
+      reachability.value = ServerReachability.Reachable
+      syncLibrary(account)
+      // the library sync can take a while, the progress fetched after it is as fresh as it gets
+      if (!account.sameOwner(accountStore.data.first())) return
+      progressSync.syncAll(account)
+      bookmarkSync.sync(account)
+      listeningSessionReporter.flushPending(account)
+      lastSyncAt = SystemClock.elapsedRealtime()
+    } catch (e: IOException) {
+      Logger.d("Could not reach the server: ${e::class.simpleName}")
+      reachability.value = ServerReachability.Unreachable
+    } catch (e: HttpException) {
+      Logger.w(e, "Could not sync with the server: HTTP ${e.code()}")
+    } catch (e: SerializationException) {
+      Logger.w(e, "The server answered in an unexpected way")
+    }
+  }
+
+  // a book that moved since Voice started, like after a seek. What moved before goes through the
+  // sync, which first
+  // checks whether another device listened since.
+  private fun pushLocalChanges() {
+    scope.launch {
+      var previous: Map<BookId, Long>? = null
+      bookRepository
+        .flow()
+        .map { books ->
+          books.filter { it.id.isBookOrbit }.associate { it.id to it.position }
+        }
+        .distinctUntilChanged()
+        // while playing the position changes all the time and the listening session sends it
+        .debounce(3.seconds)
+        .collect { positions ->
+          val before = previous
+          if (before == null) {
+            previous = positions
+            return@collect
+          }
+          // the listening session sends the book that plays
+          val playing =
+            currentBookStore.data.first()?.takeIf {
+              playStateManager.playState == PlayStateManager.PlayState.Playing
+            }
+          val moved =
+            positions.keys.filter { it in before && before[it] != positions[it] && it != playing }
+          val pushed = mutableSetOf<BookId>()
+          val account = accountStore.data.first()?.takeUnless { it.needsLogin }
+          if (account != null && connectionGate.provider.value == "bo") {
+            for (bookId in moved) {
+              if (!progressSync.push(account, bookId)) break
+              pushed += bookId
+            }
+          }
+          // what couldn't go up stays moved, so it goes up with the next change
+          previous = positions.mapValues { (bookId, position) ->
+            if (bookId in moved && bookId !in pushed) before.getValue(bookId) else position
+          }
+        }
+    }
+  }
+
+  private suspend fun syncLibrary(account: Account) {
+    try {
+      librarySync.sync(account)
+      downloads.reconcile()
+    } catch (e: HttpException) {
+      // the progress and the bookmarks still go both ways
+      Logger.w(e, "Could not sync the library: HTTP ${e.code()}")
+    } catch (e: SerializationException) {
+      Logger.w(e, "The server answered the library sync in an unexpected way")
+    }
+  }
+
+  internal fun onAppHidden() {
+    scope.launch { listeningSessionReporter.checkpoint() }
+  }
+
+  private fun syncWhenOnline() {
+    val connectivityManager = context.getSystemService<ConnectivityManager>() ?: return
+    connectivityManager.registerDefaultNetworkCallback(
+      object : ConnectivityManager.NetworkCallback() {
+        // capabilities change all the time, only a network that just got online is worth a sync
+        override fun onCapabilitiesChanged(
+          network: Network,
+          networkCapabilities: NetworkCapabilities,
+        ) {
+          val validated =
+            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+          if (validated && network != validatedNetwork) {
+            validatedNetwork = network
+            sync(force = true)
+          } else if (!validated && network == validatedNetwork) {
+            validatedNetwork = null
+          }
+        }
+
+        override fun onLost(network: Network) {
+          if (network == validatedNetwork) validatedNetwork = null
+          reachability.value = ServerReachability.Unreachable
+        }
+      },
+    )
+  }
+
+  internal suspend fun onSignedOut() {
+    listeningSessionReporter.forget()
+    reachability.value = ServerReachability.Unknown
+  }
+}

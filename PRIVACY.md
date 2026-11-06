@@ -60,6 +60,22 @@ including your device model and the app version, with it. It also streams and do
 goes only to the server you entered. I run no server for this and never receive this data. Signing out removes the
 books of the server and their downloads from your device.
 
+### BookOrbit
+
+You can connect Voice to a BookOrbit server that you or someone you trust runs, instead of Audiobookshelf. Voice sends
+your username and password to that server to sign in, then uses access and refresh tokens; it does not store your
+password. It exchanges audiobook metadata, listening progress, completion, bookmarks and listening sessions with that
+server, and streams or downloads its audio. Listening sessions identify Voice as an Android client. BookOrbit may use
+that progress for its own statistics and read-aloud ebook synchronization, according to your server settings.
+
+If you configure a Cloudflare Access service token, Voice stores it with the server login on this device and sends
+it over HTTPS to the configured BookOrbit endpoint. It is excluded from Android backup along with the server login.
+
+This data goes to the server you entered, with no Voice server in between. Signing out hides that server's books and
+removes its downloads; queued progress, bookmarks and listening sessions stay associated with the original account
+for reconnecting. They are never sent to another account. Sign-out does not delete the server's books. The server you chose controls
+its own retention and access policies.
+
 ### Backups
 
 If backups are on on your phone, Android backs up Voice's data, like your library, progress and bookmarks, to your

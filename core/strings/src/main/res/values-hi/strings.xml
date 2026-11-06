@@ -493,4 +493,14 @@
     <string name="widget.shelf.play">%1$s चलाएँ</string>
     <string name="widget.shelf.title">सुनना जारी रखें</string>
     <string name="widget.sleep_timer.stops_at">%1$s बजे रुकेगा</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit कनेक्ट करें</string>
+    <string name="bookorbit.login.error.not_found">Voice को वहाँ कोई BookOrbit सर्वर नहीं मिला। क्या आप सही नेटवर्क पर हैं?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit को अपडेट करना ज़रूरी है।</string>
+    <string name="folder.add.action.bookorbit">BookOrbit कनेक्ट करें</string>
+    <string name="server.connection.other">पहले %s से साइन आउट करें</string>
+    <string name="cloudflare.access.error">Cloudflare Access टोकन की जाँच करें और अंतिम HTTPS पता इस्तेमाल करें।</string>
+    <string name="cloudflare.client.id">क्लाइंट आईडी</string>
+    <string name="cloudflare.client.secret">क्लाइंट सीक्रेट</string>
+    <string name="bookorbit.status.connected">BookOrbit से कनेक्शन चालू है</string>
 </resources>

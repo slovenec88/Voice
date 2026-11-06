@@ -19,7 +19,7 @@ import voice.core.audiobookshelf.itemId
 import voice.core.data.Book
 import voice.core.data.BookId
 import voice.core.data.ListeningEvent
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookRepository
 import voice.core.data.store.CurrentBookStore
 import voice.core.logging.api.Logger
@@ -54,7 +54,7 @@ internal class ProgressSync(
         .associateBy { it.libraryItemId!! }
     bookRepository
       .all()
-      .filter { it.id.isRemote }
+      .filter { it.id.isAudiobookshelf }
       .forEach { book ->
         val itemId = book.id.itemId ?: return@forEach
         sync(account, book.id, progressByItem[itemId])

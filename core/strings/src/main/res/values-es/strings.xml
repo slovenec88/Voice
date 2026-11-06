@@ -512,4 +512,14 @@
     <string name="widget.shelf.play">Reproducir %1$s</string>
     <string name="widget.shelf.title">Seguir escuchando</string>
     <string name="widget.sleep_timer.stops_at">Se apaga a las %1$s</string>
+
+    <string name="bookorbit.login.address.title">Conectar BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice no encuentra ningún servidor de BookOrbit en esa dirección. ¿Estás en la red correcta?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit necesita una actualización.</string>
+    <string name="folder.add.action.bookorbit">Conectar BookOrbit</string>
+    <string name="server.connection.other">Primero cierra sesión en %s</string>
+    <string name="cloudflare.access.error">Comprueba el token de Cloudflare Access y usa la dirección HTTPS definitiva.</string>
+    <string name="cloudflare.client.id">ID de cliente</string>
+    <string name="cloudflare.client.secret">Secreto de cliente</string>
+    <string name="bookorbit.status.connected">Conexión activa con BookOrbit</string>
 </resources>

@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+  implementation(projects.core.server.api)
   implementation(projects.core.playback.api)
   implementation(projects.core.common)
   implementation(projects.core.strings)

@@ -32,7 +32,7 @@ import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.audiobookshelf.itemId
 import voice.core.common.AppInfoProvider
 import voice.core.data.BookId
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookRepository
 import voice.core.data.store.CurrentBookStore
 import voice.core.logging.api.Logger
@@ -78,7 +78,7 @@ internal class ListeningSessionReporter(
         }
         .distinctUntilChanged()
         .collectLatest { (playState, bookId) ->
-          if (bookId == null || !bookId.isRemote) {
+          if (bookId == null || !bookId.isAudiobookshelf) {
             close()
             return@collectLatest
           }

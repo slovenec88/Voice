@@ -34,6 +34,8 @@ Voice turns your own audiobook files into a calm, focused listening library. It 
 
 ## Learn more
 
+BookOrbit audiobook server support is described in [Voice with BookOrbit](website/src/pages/bookorbit.md).
+
 The [website](https://voice.woitaschek.de) shows what Voice can do, where to get it, and answers common questions in the [FAQ](https://voice.woitaschek.de/faq/).
 
 ## Contributing

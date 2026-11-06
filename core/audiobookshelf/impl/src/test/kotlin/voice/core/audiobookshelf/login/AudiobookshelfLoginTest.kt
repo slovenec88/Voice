@@ -21,6 +21,7 @@ import voice.core.audiobookshelf.ServerAccount
 import voice.core.audiobookshelf.account.Account
 import voice.core.audiobookshelf.account.AccountStore
 import voice.core.audiobookshelf.http.AudiobookshelfHttp
+import voice.core.server.ServerConnectionGate
 
 class AudiobookshelfLoginTest {
 
@@ -180,7 +181,7 @@ class AudiobookshelfLoginTest {
 
     val found = assertIs<FindServerResult.Found>(serverLogin.findServer(server.url("/").toString()))
     val login = assertIs<LoginResult.Success>(serverLogin.login(found.server, "kim", "voice"))
-    serverLogin.connect(login.login, listOf("library"))
+    assertEquals(true, serverLogin.connect(login.login, listOf("library")))
 
     coVerify { serverAccount.signOut() }
     assertEquals("2", accountStore.data.first()?.userId)
@@ -191,11 +192,18 @@ class AudiobookshelfLoginTest {
     serverAccount: ServerAccount = mockk(),
   ): AudiobookshelfLogin {
     val store = AccountStore(accountStore)
-    val http = AudiobookshelfHttp(store, mockk { every { versionName } returns "1.0.0" })
+    val gate =
+      kotlinx.coroutines.runBlocking {
+        ServerConnectionGate().apply {
+          val _ = claim("abs")
+        }
+      }
+    val http = AudiobookshelfHttp(store, mockk { every { versionName } returns "1.0.0" }, gate)
     return AudiobookshelfLogin(
       serverFinder = ServerFinder(http),
       previews = LibrariesPreviews(http, context = mockk()),
       serverAccount = serverAccount,
+      gate = gate,
       accountStore = store,
       http = http,
       sync = mockk(relaxed = true),

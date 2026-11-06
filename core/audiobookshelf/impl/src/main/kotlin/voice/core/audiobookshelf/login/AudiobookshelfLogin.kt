@@ -21,6 +21,7 @@ import voice.core.audiobookshelf.api.LoginRequest
 import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.audiobookshelf.sync.AudiobookshelfSync
 import voice.core.logging.api.Logger
+import voice.core.server.ServerConnectionGate
 
 @ContributesBinding(AppScope::class)
 @Inject
@@ -29,6 +30,7 @@ internal constructor(
   private val serverFinder: ServerFinder,
   private val previews: LibrariesPreviews,
   private val serverAccount: ServerAccount,
+  private val gate: ServerConnectionGate,
   private val accountStore: AccountStore,
   private val http: AudiobookshelfHttp,
   private val sync: AudiobookshelfSync,
@@ -118,17 +120,20 @@ internal constructor(
   override suspend fun connect(
     login: PendingLogin,
     libraryIds: List<String>,
-  ) {
+  ): Boolean {
     analytics.event("audiobookshelf_connected", mapOf("libraries" to libraryIds.size.toString()))
     val current = accountStore.data.first()
     if (current != null && current.userId != login.account.userId) serverAccount.signOut()
+    if (!gate.claim("abs")) return false
     accountStore.updateData { login.account.copy(libraryIds = libraryIds) }
     sync.sync(force = true)
+    return true
   }
 
   override suspend fun renewLogin(login: PendingLogin): Boolean {
     val current = accountStore.data.first()
-    if (current != null && current.userId != login.account.userId) return false
+    if (current == null || current.userId != login.account.userId || gate.provider.value != "abs")
+      return false
     accountStore.updateData { stored ->
       login.account.copy(libraryIds = stored?.libraryIds.orEmpty())
     }

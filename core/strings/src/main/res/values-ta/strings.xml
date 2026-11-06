@@ -493,4 +493,14 @@
     <string name="widget.shelf.play">%1$s-ஐ இயக்கு</string>
     <string name="widget.shelf.title">தொடர்ந்து கேளுங்கள்</string>
     <string name="widget.sleep_timer.stops_at">%1$s மணிக்கு நிற்கும்</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit-ஐ இணைக்கவும்</string>
+    <string name="bookorbit.login.error.not_found">அந்த முகவரியில் BookOrbit சர்வரை Voice-ஆல் அணுக முடியவில்லை. சரியான நெட்வொர்க்கில் இருக்கிறீர்களா?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit-ஐப் புதுப்பிக்க வேண்டும்.</string>
+    <string name="folder.add.action.bookorbit">BookOrbit-ஐ இணைக்கவும்</string>
+    <string name="server.connection.other">முதலில் %s-இலிருந்து வெளியேறவும்</string>
+    <string name="cloudflare.access.error">Cloudflare Access டோக்கனைச் சரிபார்த்து, இறுதி HTTPS முகவரியைப் பயன்படுத்துங்கள்.</string>
+    <string name="cloudflare.client.id">கிளையன்ட் ஐடி</string>
+    <string name="cloudflare.client.secret">கிளையன்ட் ரகசியம்</string>
+    <string name="bookorbit.status.connected">BookOrbit உடன் இணைக்கப்பட்டுள்ளது</string>
 </resources>

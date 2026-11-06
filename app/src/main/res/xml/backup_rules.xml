@@ -11,4 +11,6 @@
   <exclude domain="database" path="exoplayer_internal.db-journal" />
   <exclude domain="database" path="exoplayer_internal.db-wal" />
   <exclude domain="database" path="exoplayer_internal.db-shm" />
+  <exclude domain="file" path="bookorbit/account.json" />
+  <exclude domain="file" path="bookorbit/account.json.tmp" />
 </full-backup-content>

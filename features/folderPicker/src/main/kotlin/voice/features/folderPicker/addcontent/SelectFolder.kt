@@ -32,6 +32,7 @@ internal fun SelectFolder(
   onHelpSurvey: () -> Unit,
   origin: Origin,
   modifier: Modifier = Modifier,
+  onConnectBookOrbit: (() -> Unit)? = null,
 ) {
   var help by rememberSaveable { mutableStateOf<FolderHelp?>(null) }
   var helpAnswer by rememberSaveable { mutableStateOf<FolderHelpAnswer?>(null) }
@@ -81,6 +82,7 @@ internal fun SelectFolder(
         },
         onNoPicker = { help = FolderHelp.NoPicker },
         onConnectAudiobookshelf = onConnectAudiobookshelf,
+        onConnectBookOrbit = onConnectBookOrbit,
       )
     },
   )
