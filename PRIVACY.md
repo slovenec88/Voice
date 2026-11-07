@@ -13,7 +13,9 @@ Voice. Like every website, the service sees your IP address, and its own privacy
 
 These are the services:
 
-- Audiobookshelf: only the server you connect Voice to.
+- Audiobookshelf and BookOrbit: only the server you connect Voice to.
+  BookOrbit metadata edits stay on your device. Progress, bookmarks and listening sessions sync with your server.
+  Optional Cloudflare Access credentials go to your configured BookOrbit endpoint over HTTPS.
 - Authors: Wikipedia and Wikidata, from the Wikimedia Foundation.
 - Cover search: DuckDuckGo, and the website of the cover you pick.
 - Links: the website that opens in your browser.
@@ -21,7 +23,7 @@ These are the services:
 ## Backups
 
 If backups are on on your phone, Android backs up Voice's data, like your library, progress and bookmarks, to your
-backup account, on most phones your Google account. The login to an Audiobookshelf server isn't backed up.
+backup account, on most phones your Google account. Server logins and Cloudflare Access credentials are excluded from backups.
 
 ## Google Play build
 

@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Esita %1$s</string>
     <string name="widget.shelf.title">Jätka kuulamist</string>
     <string name="widget.sleep_timer.stops_at">Peatub kell %1$s</string>
+
+    <string name="bookorbit.login.address.title">Ühenda BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice ei saa sellel aadressil ühendust ühegi BookOrbiti serveriga. Kas oled õiges võrgus?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit vajab uuendamist.</string>
+    <string name="folder.add.action.bookorbit">Ühenda BookOrbit</string>
+    <string name="server.connection.other">Logi esmalt %s-ist välja</string>
+    <string name="cloudflare.access.error">Kontrolli Cloudflare Accessi pääsuluba ja kasuta lõplikku HTTPS-aadressi.</string>
+    <string name="cloudflare.client.id">Kliendi ID</string>
+    <string name="cloudflare.client.secret">Kliendi saladus</string>
+    <string name="bookorbit.status.connected">Ühendatud BookOrbitiga</string>
 </resources>

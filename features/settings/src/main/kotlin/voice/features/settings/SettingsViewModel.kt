@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import voice.core.analytics.api.AnalyticsConsentStore
 import voice.core.audiobookshelf.AudiobookshelfFeatureFlag
 import voice.core.audiobookshelf.ServerAccount
+import voice.core.bookorbit.BookOrbit
+import voice.core.bookorbit.BookOrbitFeatureFlag
 import voice.core.common.AppInfoProvider
 import voice.core.common.DispatcherProvider
 import voice.core.common.FeedbackLinks
@@ -70,6 +72,8 @@ class SettingsViewModel(
   private val dispatcherProvider: DispatcherProvider,
   private val serverAccount: ServerAccount,
   private val audiobookshelfFeatureFlag: AudiobookshelfFeatureFlag,
+  private val bookorbit: BookOrbit,
+  private val bookorbitFeatureFlag: BookOrbitFeatureFlag,
 ) : SettingsListener {
 
   private val mainScope = MainScope(dispatcherProvider)
@@ -149,6 +153,16 @@ class SettingsViewModel(
     }
       .collectAsState(initial = null)
       .value
+    val bookOrbitServer = remember {
+      bookorbit.connection.map { it?.serverName }
+    }
+      .collectAsState(initial = null)
+      .value
+    val bookOrbitEnabled = remember {
+      bookorbitFeatureFlag.flow.map { it.value }
+    }
+      .collectAsState(initial = false)
+      .value
     val dynamicColorAvailable = remember {
       dynamicColorAvailability.isSupported()
     }
@@ -209,6 +223,8 @@ class SettingsViewModel(
       audiobookshelfServer = audiobookshelfServer.name,
       // a connected server stays reachable, so it can be signed out of
       showAudiobookshelf = audiobookshelfEnabled || audiobookshelfServer.name != null,
+      bookOrbitServer = bookOrbitServer,
+      showBookOrbit = bookOrbitEnabled || bookOrbitServer != null,
     )
   }
 
@@ -330,10 +346,22 @@ class SettingsViewModel(
   override fun openAudiobookshelf() {
     mainScope.launch {
       navigator.goTo(
-        if (serverAccount.isConnected()) {
-          Destination.AudiobookshelfSettings
-        } else {
-          Destination.AudiobookshelfLogin(Origin.Default)
+        when {
+          bookorbit.isConnected() -> Destination.BookOrbitSettings
+          serverAccount.isConnected() -> Destination.AudiobookshelfSettings
+          else -> Destination.AudiobookshelfLogin(Origin.Default)
+        },
+      )
+    }
+  }
+
+  override fun openBookOrbit() {
+    mainScope.launch {
+      navigator.goTo(
+        when {
+          serverAccount.isConnected() -> Destination.AudiobookshelfSettings
+          bookorbit.isConnected() -> Destination.BookOrbitSettings
+          else -> Destination.BookOrbitLogin(Origin.Default)
         },
       )
     }

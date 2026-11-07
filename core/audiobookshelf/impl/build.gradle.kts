@@ -9,6 +9,7 @@ dependencies {
   implementation(projects.core.data.api)
   implementation(projects.core.initializer)
   implementation(projects.core.playback.api)
+  implementation(projects.core.server.api)
   implementation(projects.core.strings)
 
   implementation(libs.bundles.retrofit)

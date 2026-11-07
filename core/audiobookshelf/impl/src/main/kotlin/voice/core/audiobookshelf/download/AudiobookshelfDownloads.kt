@@ -10,7 +10,6 @@ import androidx.media3.exoplayer.offline.DownloadRequest
 import androidx.media3.exoplayer.offline.DownloadService
 import androidx.media3.exoplayer.scheduler.Requirements
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.util.concurrent.Executors
@@ -34,9 +33,10 @@ import kotlinx.coroutines.withContext
 import voice.core.audiobookshelf.ServerDownloads
 import voice.core.audiobookshelf.account.PreferencesStore
 import voice.core.data.BookId
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookRepository
 import voice.core.logging.api.Logger
+import voice.core.server.ServerConnectionGate
 
 /**
  * Downloads server books so they play without a connection. Each audio file is a download of its
@@ -44,7 +44,6 @@ import voice.core.logging.api.Logger
  * listener stop them.
  */
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class)
 @Inject
 public class AudiobookshelfDownloads
 internal constructor(
@@ -53,6 +52,7 @@ internal constructor(
   private val bookRepository: BookRepository,
   private val preferencesStore: PreferencesStore,
   private val notifications: DownloadNotifications,
+  private val gate: ServerConnectionGate,
 ) : ServerDownloads {
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -126,7 +126,7 @@ internal constructor(
             else -> null
           }
         books
-          .filter { it.id.isRemote }
+          .filter { it.id.isAudiobookshelf }
           .mapNotNull { book ->
             val state =
               bookDownloadState(book.chapters, files, waitingFor) ?: return@mapNotNull null
@@ -143,6 +143,12 @@ internal constructor(
       val manager = downloadManager
       manager.requirements = requirements(preferencesStore.data.first().downloadOverMobileData)
       notMetRequirements.value = manager.notMetRequirements
+    }
+    scope.launch {
+      gate.provider.collect { selected ->
+        if (selected == "abs") downloadManager.resumeDownloads()
+        else downloadManager.pauseDownloads()
+      }
     }
     notifyResults()
   }
@@ -224,7 +230,7 @@ internal constructor(
    * the new files of books that were downloaded.
    */
   internal suspend fun reconcile() {
-    val books = bookRepository.all().filter { it.id.isRemote }
+    val books = bookRepository.all().filter { it.id.isAudiobookshelf }
     val current = books.flatMap { book -> book.chapters.map { it.id.value } }.toSet()
     val present = files.value
     // by its book, as the server can replace all files of a book at once
@@ -286,7 +292,7 @@ internal constructor(
 
   /** @return whether a file was added */
   private suspend fun addMissingFiles(bookId: BookId): Boolean {
-    if (!bookId.isRemote) return false
+    if (gate.provider.value != "abs" || !bookId.isAudiobookshelf) return false
     val book = bookRepository.get(bookId) ?: return false
     return withContext(Dispatchers.Main) {
       val present = files.value

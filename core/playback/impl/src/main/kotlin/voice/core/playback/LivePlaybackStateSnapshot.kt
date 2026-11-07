@@ -24,5 +24,6 @@ internal fun MediaController.livePlaybackStateSnapshot(bookId: BookId? = null): 
     positionMs = positionInChapter,
     isPlaying = !Util.shouldShowPlayButton(this),
     playbackSpeed = playbackParameters.speed,
+    isAdvancing = isPlaying,
   )
 }

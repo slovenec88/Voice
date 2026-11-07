@@ -899,4 +899,16 @@
     <string name="widget.shelf.title">Continue listening</string>
     <!-- Shown on the Now playing widget while the sleep timer runs, with the clock time playback stops, like "Stops at 23:10". -->
     <string name="widget.sleep_timer.stops_at">Stops at %1$s</string>
+
+    <string name="bookorbit.login.address.title">Connect BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice can\'t reach a BookOrbit server there. Are you on the right network?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit needs an update.</string>
+    <string name="bookorbit.title" translatable="false">BookOrbit</string>
+    <string name="folder.add.action.bookorbit">Connect BookOrbit</string>
+    <string name="server.connection.other">Sign out of %s first</string>
+    <string name="cloudflare.access" translatable="false">Cloudflare Access</string>
+    <string name="cloudflare.access.error">Check the Cloudflare Access token and use the final HTTPS address.</string>
+    <string name="cloudflare.client.id">Client ID</string>
+    <string name="cloudflare.client.secret">Client secret</string>
+    <string name="bookorbit.status.connected">Connected to BookOrbit</string>
 </resources>

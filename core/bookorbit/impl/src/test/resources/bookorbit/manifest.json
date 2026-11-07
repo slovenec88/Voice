@@ -1,0 +1,54 @@
+{
+  "schema": "bookorbit.audiobook-manifest",
+  "schemaVersion": 2,
+  "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "book": {
+    "id": 42,
+    "title": "A Story in Two Files",
+    "authors": ["A. Author", "B. Author"],
+    "narrators": ["The Narrator"],
+    "hasCover": true
+  },
+  "assets": [
+    {
+      "assetId": "aud_aaaaaaaa-1111-4111-8111-111111111111",
+      "fileId": 101,
+      "sequence": 0,
+      "format": "mp3",
+      "durationMs": 60000,
+      "sizeBytes": 1000000,
+      "etag": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "assetId": "aud_bbbbbbbb-2222-4222-8222-222222222222",
+      "fileId": 102,
+      "sequence": 1,
+      "format": "mp3",
+      "durationMs": 60000,
+      "sizeBytes": null,
+      "etag": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch_11111111111111111111111111111111",
+      "title": "The Long Chapter",
+      "assetId": "aud_aaaaaaaa-1111-4111-8111-111111111111",
+      "sequence": 0,
+      "startMs": 0,
+      "endMs": 90000,
+      "assetOffsetMs": 0
+    },
+    {
+      "id": "ch_22222222222222222222222222222222",
+      "title": "The Last Chapter",
+      "assetId": "aud_bbbbbbbb-2222-4222-8222-222222222222",
+      "sequence": 1,
+      "startMs": 90000,
+      "endMs": 120000,
+      "assetOffsetMs": 30000
+    }
+  ],
+  "totalDurationMs": 120000,
+  "futureServerField": {"ignored": true}
+}

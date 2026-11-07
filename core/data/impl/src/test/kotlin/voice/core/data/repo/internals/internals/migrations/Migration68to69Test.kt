@@ -31,24 +31,29 @@ class Migration68to69Test {
   fun `the edits stay, with no series yet and no book hidden`() {
     val dbName = "testDb"
     helper.createDatabase(dbName, 68).use { db ->
-      db.insert(
-        "customMetadata",
-        SQLiteDatabase.CONFLICT_FAIL,
-        ContentValues().apply {
-          put("bookId", "content://hyperion")
-          put("name", "Hyperion Cantos")
-          put("author", "Dan Simmons")
-        },
-      )
+      for (bookId in listOf("content://hyperion", "bo://book/7")) {
+        db.insert(
+          "customMetadata",
+          SQLiteDatabase.CONFLICT_FAIL,
+          ContentValues().apply {
+            put("bookId", bookId)
+            put("name", "Hyperion Cantos")
+            put("author", "Dan Simmons")
+          },
+        )
+      }
     }
 
     val migrated = helper.runMigrationsAndValidate(dbName, 69, true, *allMigrations())
 
     assertEquals(
       expected =
-        listOf(listOf("content://hyperion", "Hyperion Cantos", "Dan Simmons", null, null, 0L)),
+        listOf(
+          listOf("bo://book/7", "Hyperion Cantos", "Dan Simmons", null, null, 0L),
+          listOf("content://hyperion", "Hyperion Cantos", "Dan Simmons", null, null, 0L),
+        ),
       actual =
-        migrated.query("SELECT * FROM customMetadata").mapRows {
+        migrated.query("SELECT * FROM customMetadata ORDER BY bookId").mapRows {
           listOf(
             getString("bookId"),
             getStringOrNull("name"),

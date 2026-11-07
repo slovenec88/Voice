@@ -12,6 +12,7 @@ dependencies {
   implementation(projects.core.featureflag)
   implementation(projects.core.kioskmode)
   implementation(projects.core.audiobookshelf.api)
+  implementation(projects.core.bookorbit.api)
 
   implementation(libs.lifecycle)
   implementation(libs.lifecycle.compose)

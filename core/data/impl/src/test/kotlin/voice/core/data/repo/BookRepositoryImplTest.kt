@@ -3,9 +3,15 @@ package voice.core.data.repo
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.coEvery
+import io.mockk.mockk
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.runner.RunWith
@@ -66,6 +72,47 @@ class BookRepositoryImplTest {
     repo.updateCustomMetadata(id) { it.copy(name = "Dune Messiah") }
 
     assertEquals(expected = emptyList(), actual = db.customMetadataDao().all())
+  }
+
+  @Test
+  fun `metadata and playback updates use the same lock and keep both changes`() = runTest {
+    val initial = content(name = "Book", author = "Author")
+    contentRepo.put(initial)
+    val entered = CompletableDeferred<Unit>()
+    val release = CompletableDeferred<Unit>()
+    var first = true
+    val gatedContents =
+      mockk<BookContentRepo> {
+        coEvery { get(initial.id) } coAnswers
+          {
+            if (first) {
+              first = false
+              entered.complete(Unit)
+              release.await()
+            }
+            contentRepo.get(initial.id)
+          }
+        coEvery { put(any()) } coAnswers { contentRepo.put(firstArg()) }
+      }
+    val shared = BookRepositoryImpl(mockk(), gatedContents, mockk())
+    val metadata = async {
+      shared.updateBook(initial.id) { it.copy(metadata = it.metadata.copy(name = "Updated title")) }
+    }
+    entered.await()
+    val playback = async { shared.updateBook(initial.id) { it.copy(positionInChapter = 12_000) } }
+    runCurrent()
+    assertFalse(playback.isCompleted)
+    release.complete(Unit)
+    metadata.await()
+    playback.await()
+
+    assertEquals(
+      initial.copy(
+        positionInChapter = 12_000,
+        metadata = initial.metadata.copy(name = "Updated title"),
+      ),
+      contentRepo.get(initial.id),
+    )
   }
 
   private fun content(

@@ -525,4 +525,14 @@
     <string name="widget.shelf.play">הפעלת %1$s</string>
     <string name="widget.shelf.title">המשך האזנה</string>
     <string name="widget.sleep_timer.stops_at">ייעצר ב-%1$s</string>
+
+    <string name="bookorbit.login.address.title">חיבור ל-BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">לא נמצא שרת BookOrbit בכתובת הזו. האם אתם מחוברים לרשת הנכונה?</string>
+    <string name="bookorbit.login.error.too_old">צריך לעדכן את BookOrbit.</string>
+    <string name="folder.add.action.bookorbit">חיבור ל-BookOrbit</string>
+    <string name="server.connection.other">יש להתנתק תחילה מ־%s</string>
+    <string name="cloudflare.access.error">בדקו את האסימון של Cloudflare Access והשתמשו בכתובת ה-HTTPS הסופית.</string>
+    <string name="cloudflare.client.id">מזהה לקוח</string>
+    <string name="cloudflare.client.secret">סוד לקוח</string>
+    <string name="bookorbit.status.connected">החיבור ל-BookOrbit פעיל</string>
 </resources>

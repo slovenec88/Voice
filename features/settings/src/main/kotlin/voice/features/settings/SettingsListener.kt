@@ -49,6 +49,8 @@ interface SettingsListener {
 
   fun openAudiobookshelf()
 
+  fun openBookOrbit()
+
   fun onAppVersionClick()
 
   fun openDeveloperMenu()
@@ -99,6 +101,8 @@ interface SettingsListener {
         override fun openFolderPicker() {}
 
         override fun openAudiobookshelf() {}
+
+        override fun openBookOrbit() {}
 
         override fun onAppVersionClick() {}
 

@@ -588,4 +588,14 @@
     <string name="widget.shelf.play">تشغيل %1$s</string>
     <string name="widget.shelf.title">متابعة الاستماع</string>
     <string name="widget.sleep_timer.stops_at">يتوقف الساعة %1$s</string>
+
+    <string name="bookorbit.login.address.title">ربط BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">يتعذّر على Voice الوصول إلى خادم BookOrbit على هذا العنوان. هل هذه هي الشبكة الصحيحة؟</string>
+    <string name="bookorbit.login.error.too_old">يحتاج BookOrbit إلى تحديث.</string>
+    <string name="folder.add.action.bookorbit">ربط BookOrbit</string>
+    <string name="server.connection.other">سجّل الخروج من %s أولاً</string>
+    <string name="cloudflare.access.error">يُرجى التحقق من رمز Cloudflare Access واستخدام عنوان HTTPS النهائي.</string>
+    <string name="cloudflare.client.id">معرّف العميل</string>
+    <string name="cloudflare.client.secret">سر العميل</string>
+    <string name="bookorbit.status.connected">الاتصال بـ BookOrbit نشط</string>
 </resources>

@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Spill %1$s</string>
     <string name="widget.shelf.title">Fortsett å lytte</string>
     <string name="widget.sleep_timer.stops_at">Stopper kl. %1$s</string>
+
+    <string name="bookorbit.login.address.title">Koble til BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice når ingen BookOrbit-server der. Er du på riktig nettverk?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit må oppdateres.</string>
+    <string name="folder.add.action.bookorbit">Koble til BookOrbit</string>
+    <string name="server.connection.other">Logg ut av %s først</string>
+    <string name="cloudflare.access.error">Sjekk Cloudflare Access-tokenet og bruk den endelige HTTPS-adressen.</string>
+    <string name="cloudflare.client.id">Klient-ID</string>
+    <string name="cloudflare.client.secret">Klienthemmelighet</string>
+    <string name="bookorbit.status.connected">Tilkoblet BookOrbit</string>
 </resources>

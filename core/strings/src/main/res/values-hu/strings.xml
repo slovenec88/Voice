@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">%1$s lejátszása</string>
     <string name="widget.shelf.title">Hallgatás folytatása</string>
     <string name="widget.sleep_timer.stops_at">Leáll ekkor: %1$s</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit csatlakoztatása</string>
+    <string name="bookorbit.login.error.not_found">A Voice nem talál BookOrbit-szervert ezen a címen. A megfelelő hálózaton van?</string>
+    <string name="bookorbit.login.error.too_old">A BookOrbit frissítése szükséges.</string>
+    <string name="folder.add.action.bookorbit">BookOrbit csatlakoztatása</string>
+    <string name="server.connection.other">Előbb jelentkezz ki innen: %s</string>
+    <string name="cloudflare.access.error">Ellenőrizze a Cloudflare Access-tokent, és használja a végleges HTTPS-címet.</string>
+    <string name="cloudflare.client.id">Kliensazonosító</string>
+    <string name="cloudflare.client.secret">Titkos klienskulcs</string>
+    <string name="bookorbit.status.connected">Csatlakozva a BookOrbithoz</string>
 </resources>

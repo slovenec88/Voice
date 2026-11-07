@@ -546,4 +546,14 @@
     <string name="widget.shelf.play">Відтворити %1$s</string>
     <string name="widget.shelf.title">Продовжити слухання</string>
     <string name="widget.sleep_timer.stops_at">Зупиниться о %1$s</string>
+
+    <string name="bookorbit.login.address.title">Підключити BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice не знаходить за цією адресою сервер BookOrbit. Ви підключені до потрібної мережі?</string>
+    <string name="bookorbit.login.error.too_old">Потрібно оновити BookOrbit.</string>
+    <string name="folder.add.action.bookorbit">Підключити BookOrbit</string>
+    <string name="server.connection.other">Спочатку вийдіть із %s</string>
+    <string name="cloudflare.access.error">Перевірте токен Cloudflare Access і скористайтеся кінцевою HTTPS-адресою.</string>
+    <string name="cloudflare.client.id">Ідентифікатор клієнта</string>
+    <string name="cloudflare.client.secret">Секрет клієнта</string>
+    <string name="bookorbit.status.connected">Підключено до BookOrbit</string>
 </resources>

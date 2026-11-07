@@ -32,6 +32,7 @@ import voice.core.data.BookId
 import voice.core.data.CustomMetadata
 import voice.core.data.store.CurrentBookStore
 import voice.core.playback.playstate.PlayStateManager
+import voice.core.server.ServerConnectionGate
 
 class ProgressSyncTest {
 
@@ -239,6 +240,11 @@ class ProgressSyncTest {
         AudiobookshelfHttp(
           AccountStore(accountStore),
           OkHttpClient(),
+          kotlinx.coroutines.runBlocking {
+            ServerConnectionGate().apply {
+              val _ = claim("abs")
+            }
+          },
         ),
       bookRepository = repo,
       syncedProgressStore = SyncedProgressStore(syncedProgress),

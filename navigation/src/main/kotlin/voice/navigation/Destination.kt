@@ -159,4 +159,18 @@ sealed interface Destination {
     override val trackingName: String
       get() = "AudiobookshelfSettings"
   }
+
+  @Serializable
+  data class BookOrbitLogin(
+    val origin: Origin,
+    val renew: Boolean = false,
+  ) : Compose {
+    override val trackingName: String = "BookOrbitLogin"
+  }
+
+  @Serializable
+  data object BookOrbitSettings : Compose {
+    override val trackingName: String
+      get() = "BookOrbitSettings"
+  }
 }

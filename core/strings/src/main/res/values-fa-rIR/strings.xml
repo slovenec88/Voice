@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">پخش %1$s</string>
     <string name="widget.shelf.title">ادامهٔ گوش دادن</string>
     <string name="widget.sleep_timer.stops_at">توقف در ساعت %1$s</string>
+
+    <string name="bookorbit.login.address.title">اتصال به BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice نمی‌تواند در این نشانی سرور BookOrbit را پیدا کند. به شبکهٔ درست وصل هستید؟</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit نیاز به به‌روزرسانی دارد.</string>
+    <string name="folder.add.action.bookorbit">اتصال به BookOrbit</string>
+    <string name="server.connection.other">ابتدا از %s خارج شوید</string>
+    <string name="cloudflare.access.error">توکن Cloudflare Access را بررسی کنید و از نشانی نهایی HTTPS استفاده کنید.</string>
+    <string name="cloudflare.client.id">شناسهٔ کارخواه</string>
+    <string name="cloudflare.client.secret">کلید محرمانهٔ کارخواه</string>
+    <string name="bookorbit.status.connected">متصل به BookOrbit</string>
 </resources>

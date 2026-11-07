@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import voice.core.data.AUDIOBOOKSHELF_SCHEME
+import voice.core.data.BOOKORBIT_SCHEME
 import voice.core.logging.api.Logger
 import voice.core.playback.Media3AudioOffloadFeatureFlag
 import voice.core.playback.history.AutomaticPauseRecorder
@@ -115,7 +116,8 @@ object PlaybackModule {
               mediaItem: MediaItem?,
               reason: Int,
             ) {
-              val streams = mediaItem?.localConfiguration?.uri?.scheme == AUDIOBOOKSHELF_SCHEME
+              val scheme = mediaItem?.localConfiguration?.uri?.scheme
+              val streams = scheme == AUDIOBOOKSHELF_SCHEME || scheme == BOOKORBIT_SCHEME
               player.setWakeMode(if (streams) C.WAKE_MODE_NETWORK else C.WAKE_MODE_LOCAL)
             }
 

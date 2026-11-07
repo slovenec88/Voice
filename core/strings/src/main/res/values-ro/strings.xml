@@ -525,4 +525,14 @@
     <string name="widget.shelf.play">Redă %1$s</string>
     <string name="widget.shelf.title">Continuă ascultarea</string>
     <string name="widget.sleep_timer.stops_at">Se oprește la %1$s</string>
+
+    <string name="bookorbit.login.address.title">Conectează BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice nu găsește niciun server BookOrbit la adresa asta. Ești în rețeaua potrivită?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit trebuie actualizat.</string>
+    <string name="folder.add.action.bookorbit">Conectează BookOrbit</string>
+    <string name="server.connection.other">Deconectează-te mai întâi de la %s</string>
+    <string name="cloudflare.access.error">Verifică tokenul Cloudflare Access și folosește adresa HTTPS finală.</string>
+    <string name="cloudflare.client.id">ID client</string>
+    <string name="cloudflare.client.secret">Cheie secretă a clientului</string>
+    <string name="bookorbit.status.connected">Conectat la BookOrbit</string>
 </resources>

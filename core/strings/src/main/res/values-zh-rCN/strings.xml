@@ -483,4 +483,14 @@
     <string name="widget.shelf.play">播放《%1$s》</string>
     <string name="widget.shelf.title">继续收听</string>
     <string name="widget.sleep_timer.stops_at">将于 %1$s 停止</string>
+
+    <string name="bookorbit.login.address.title">连接 BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice 无法在该地址连接到 BookOrbit 服务器。您连接的网络正确吗？</string>
+    <string name="bookorbit.login.error.too_old">需要更新 BookOrbit。</string>
+    <string name="folder.add.action.bookorbit">连接 BookOrbit</string>
+    <string name="server.connection.other">请先退出 %s</string>
+    <string name="cloudflare.access.error">请检查 Cloudflare Access 令牌，并使用最终的 HTTPS 地址。</string>
+    <string name="cloudflare.client.id">客户端 ID</string>
+    <string name="cloudflare.client.secret">客户端密钥</string>
+    <string name="bookorbit.status.connected">已连接到 BookOrbit</string>
 </resources>

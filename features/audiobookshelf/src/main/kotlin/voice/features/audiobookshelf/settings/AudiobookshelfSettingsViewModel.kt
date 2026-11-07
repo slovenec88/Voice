@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.launch
 import voice.core.audiobookshelf.AudiobookshelfConnection
+import voice.core.audiobookshelf.AudiobookshelfControls
 import voice.core.audiobookshelf.ServerAccount
 import voice.core.audiobookshelf.ServerDownloads
 import voice.core.audiobookshelf.ServerLibrary
@@ -25,8 +26,8 @@ import voice.navigation.Origin
 @Inject
 class AudiobookshelfSettingsViewModel(
   private val serverAccount: ServerAccount,
-  private val serverLibrary: ServerLibrary,
-  private val downloads: ServerDownloads,
+  @AudiobookshelfControls private val serverLibrary: ServerLibrary,
+  @AudiobookshelfControls private val downloads: ServerDownloads,
   private val navigator: Navigator,
   dispatcherProvider: DispatcherProvider,
 ) {

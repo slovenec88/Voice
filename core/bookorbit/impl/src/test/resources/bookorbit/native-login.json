@@ -1,0 +1,15 @@
+{
+  "accessToken": "access-one",
+  "accessTokenExpiresAt": "2026-10-30T10:15:00.000Z",
+  "refreshToken": "refresh-one",
+  "refreshTokenExpiresAt": "2026-11-30T10:00:00.000Z",
+  "sessionId": 81,
+  "user": {
+    "id": 7,
+    "username": "listener",
+    "name": "Listener",
+    "permissions": ["library_access", "library_download"],
+    "isSuperuser": false,
+    "defaultPassword": false
+  }
+}

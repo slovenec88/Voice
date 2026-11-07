@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Αναπαραγωγή: %1$s</string>
     <string name="widget.shelf.title">Συνέχεια ακρόασης</string>
     <string name="widget.sleep_timer.stops_at">Σταματά στις %1$s</string>
+
+    <string name="bookorbit.login.address.title">Σύνδεση με το BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Το Voice δεν βρίσκει διακομιστή BookOrbit σε αυτή τη διεύθυνση. Είστε στο σωστό δίκτυο;</string>
+    <string name="bookorbit.login.error.too_old">Το BookOrbit χρειάζεται ενημέρωση.</string>
+    <string name="folder.add.action.bookorbit">Σύνδεση με το BookOrbit</string>
+    <string name="server.connection.other">Αποσυνδέσου πρώτα από το %s</string>
+    <string name="cloudflare.access.error">Ελέγξτε το διακριτικό Cloudflare Access και χρησιμοποιήστε την τελική διεύθυνση HTTPS.</string>
+    <string name="cloudflare.client.id">Αναγνωριστικό πελάτη</string>
+    <string name="cloudflare.client.secret">Μυστικό πελάτη</string>
+    <string name="bookorbit.status.connected">Σύνδεση με το BookOrbit</string>
 </resources>

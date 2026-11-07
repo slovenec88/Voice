@@ -245,6 +245,19 @@ class EditBookViewModelTest {
     }
 
   @Test
+  fun `editing a BookOrbit book saves a local override`() =
+    runTest(dispatcher) {
+      val bookOrbitBook = book(name = "Dune", id = BookId("bo://book/7"))
+      coEvery { repo.updateCustomMetadata(bookOrbitBook.id, capture(update)) } returns Unit
+      val saved = save(title = "My title", book = bookOrbitBook)
+
+      assertEquals("My title", saved.name)
+      coVerify(exactly = 0) {
+        val _ = serverLibrary.updateBook(any(), any())
+      }
+    }
+
+  @Test
   fun `the series of a server book is saved on the server, and the sheet stays until it's saved`() =
     runTest(dispatcher) {
       openServerBook()

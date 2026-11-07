@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Oynat: %1$s</string>
     <string name="widget.shelf.title">Dinlemeye devam et</string>
     <string name="widget.sleep_timer.stops_at">Durma saati: %1$s</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit\'e bağlan</string>
+    <string name="bookorbit.login.error.not_found">Voice bu adreste bir BookOrbit sunucusuna ulaşamıyor. Doğru ağda mısınız?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit güncellenmeli.</string>
+    <string name="folder.add.action.bookorbit">BookOrbit\'e bağlan</string>
+    <string name="server.connection.other">Önce %s oturumunu kapatın</string>
+    <string name="cloudflare.access.error">Cloudflare Access belirtecini kontrol edin ve son HTTPS adresini kullanın.</string>
+    <string name="cloudflare.client.id">İstemci kimliği</string>
+    <string name="cloudflare.client.secret">İstemci gizli anahtarı</string>
+    <string name="bookorbit.status.connected">BookOrbit bağlantısı etkin</string>
 </resources>

@@ -29,6 +29,8 @@ data class SettingsViewState(
   /** The connected Audiobookshelf server, or null without one. */
   val audiobookshelfServer: String?,
   val showAudiobookshelf: Boolean,
+  val bookOrbitServer: String? = null,
+  val showBookOrbit: Boolean = false,
 ) {
 
   companion object {

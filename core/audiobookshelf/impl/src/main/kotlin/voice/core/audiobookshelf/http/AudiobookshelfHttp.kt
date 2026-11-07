@@ -23,6 +23,7 @@ import voice.core.audiobookshelf.account.AccountStore
 import voice.core.audiobookshelf.api.AudiobookshelfApi
 import voice.core.audiobookshelf.audiobookshelfJson
 import voice.core.logging.api.Logger
+import voice.core.server.ServerConnectionGate
 
 /**
  * Talks to the server of the signed in account. Requests to it carry the access token, and an
@@ -34,6 +35,7 @@ import voice.core.logging.api.Logger
 internal class AudiobookshelfHttp(
   private val accountStore: AccountStore,
   okHttpClient: OkHttpClient,
+  private val gate: ServerConnectionGate,
 ) {
 
   val client: OkHttpClient =
@@ -89,6 +91,7 @@ internal class AudiobookshelfHttp(
 
   private inner class AccessTokenInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
+      if (gate.provider.value != "abs") throw IOException("Another audiobook server is selected")
       val request = chain.request()
       val account = currentAccount()
       if (account == null || !request.url.toString().startsWith(account.serverUrl)) {
@@ -106,6 +109,7 @@ internal class AudiobookshelfHttp(
     ): Request? {
       val request = response.request
       synchronized(this) {
+        if (gate.provider.value != "abs") return null
         val account = currentAccount() ?: return null
         if (!request.url.toString().startsWith(account.serverUrl) || account.needsLogin) return null
         if (response.priorResponse != null) return null

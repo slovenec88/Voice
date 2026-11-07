@@ -17,9 +17,11 @@ import kotlinx.coroutines.launch
 import voice.core.audiobookshelf.ServerAccount
 import voice.core.audiobookshelf.ServerDownloads
 import voice.core.audiobookshelf.download.BookDownloadState
+import voice.core.bookorbit.BookOrbit
 import voice.core.data.Book
 import voice.core.data.BookId
 import voice.core.data.category
+import voice.core.data.isBookOrbit
 import voice.core.data.isRemote
 import voice.core.data.repo.BookRepository
 import voice.core.playback.ExperimentalPlaybackPersistenceFeatureFlag
@@ -37,6 +39,7 @@ class BottomSheetViewModel(
   private val viewModels: Set<@JvmSuppressWildcards BottomSheetItemViewModel>,
   private val repo: BookRepository,
   private val serverAccount: ServerAccount,
+  private val bookorbit: BookOrbit,
   private val serverDownloads: ServerDownloads,
   private val navigator: Navigator,
   private val playerController: PlayerController,
@@ -58,7 +61,8 @@ class BottomSheetViewModel(
         }
         .value
     val server = remember {
-      serverAccount.serverName.map(::ServerName)
+      if (bookId.isBookOrbit) bookorbit.connection.map { ServerName(it?.serverName) }
+      else serverAccount.serverName.map(::ServerName)
     }
       .collectAsState(initial = null)
       .value

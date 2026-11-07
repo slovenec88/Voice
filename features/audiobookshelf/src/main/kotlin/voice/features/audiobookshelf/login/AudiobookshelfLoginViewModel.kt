@@ -172,7 +172,11 @@ class AudiobookshelfLoginViewModel(
     if (current.busy) return
     state = current.copy(busy = true)
     scope.launch {
-      serverLogin.connect(login, current.libraries.filter { it.selected }.map { it.id })
+      if (!serverLogin.connect(login, current.libraries.filter { it.selected }.map { it.id })) {
+        state = current.copy(busy = false)
+        navigator.goTo(Destination.BookOrbitSettings)
+        return@launch
+      }
       when (origin) {
         Origin.Default -> navigator.setRoot(Destination.BookOverview)
         Origin.Onboarding -> navigator.goTo(Destination.OnboardingCompletion)

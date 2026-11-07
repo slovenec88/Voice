@@ -23,6 +23,7 @@ import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.data.Book
 import voice.core.data.BookId
 import voice.core.data.CustomMetadata
+import voice.core.server.ServerConnectionGate
 
 class ServerBookUpdateTest {
 
@@ -278,6 +279,11 @@ class ServerBookUpdateTest {
         AudiobookshelfHttp(
           AccountStore(MemoryDataStore<Account?>(account)),
           OkHttpClient(),
+          kotlinx.coroutines.runBlocking {
+            ServerConnectionGate().apply {
+              val _ = claim("abs")
+            }
+          },
         ),
       accountStore = AccountStore(MemoryDataStore<Account?>(account)),
       bookRepository = repo,

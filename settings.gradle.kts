@@ -139,6 +139,16 @@ include(":core:audiobookshelf:impl")
 
 include(":features:audiobookshelf")
 
+include(":core:bookorbit:api")
+
+include(":core:bookorbit:impl")
+
+include(":core:server:api")
+
+include(":core:server:impl")
+
+include(":features:bookorbit")
+
 include(":core:foldersync")
 
 include(":core:datastore")

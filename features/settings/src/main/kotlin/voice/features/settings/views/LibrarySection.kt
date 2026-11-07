@@ -79,6 +79,9 @@ internal fun LibrarySection(
   onAudiobookshelfClick: () -> Unit,
   onUseGridChange: (Boolean) -> Unit,
   modifier: Modifier = Modifier,
+  bookOrbitServer: String? = null,
+  showBookOrbit: Boolean = false,
+  onBookOrbitClick: () -> Unit = {},
 ) {
   val colors = MaterialTheme.colorScheme
   // the tertiary container is a light tone in the dark theme, which glares as a whole island
@@ -113,7 +116,20 @@ internal fun LibrarySection(
       summary = { FolderNames(folderNames) },
     )
     if (showAudiobookshelf) {
-      AudiobookshelfRow(audiobookshelfServer, onAudiobookshelfClick)
+      ServerRow(
+        audiobookshelfServer,
+        onAudiobookshelfClick,
+        StringsR.string.audiobookshelf_title,
+        bookOrbitServer?.let { "BookOrbit" },
+      )
+    }
+    if (showBookOrbit) {
+      ServerRow(
+        bookOrbitServer,
+        onBookOrbitClick,
+        StringsR.string.bookorbit_title,
+        audiobookshelfServer?.let { "Audiobookshelf" },
+      )
     }
     Spacer(Modifier.height(12.dp))
     Row(
@@ -362,12 +378,14 @@ private fun DrawScope.drawMiniList(
 }
 
 @Composable
-private fun AudiobookshelfRow(
+private fun ServerRow(
   server: String?,
   onClick: () -> Unit,
+  title: Int,
+  blockedBy: String?,
 ) {
   IslandRow(
-    title = stringResource(StringsR.string.audiobookshelf_title),
+    title = stringResource(title),
     onClick = onClick,
     leading = {
       ShapedIcon(
@@ -384,6 +402,8 @@ private fun AudiobookshelfRow(
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
+      } else if (blockedBy != null) {
+        Text(stringResource(StringsR.string.server_connection_other, blockedBy))
       } else {
         Text(stringResource(StringsR.string.settings_library_audiobookshelf_summary))
       }

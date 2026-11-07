@@ -546,4 +546,14 @@
     <string name="widget.shelf.play">Přehrát %1$s</string>
     <string name="widget.shelf.title">Pokračovat v poslechu</string>
     <string name="widget.sleep_timer.stops_at">Hraje do %1$s</string>
+
+    <string name="bookorbit.login.address.title">Připojit BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice na této adrese nemůže najít server BookOrbit. Jste ve správné síti?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit je potřeba aktualizovat.</string>
+    <string name="folder.add.action.bookorbit">Připojit BookOrbit</string>
+    <string name="server.connection.other">Nejprve se odhlaste z %s</string>
+    <string name="cloudflare.access.error">Zkontrolujte token Cloudflare Access a použijte konečnou adresu HTTPS.</string>
+    <string name="cloudflare.client.id">ID klienta</string>
+    <string name="cloudflare.client.secret">Tajný klíč klienta</string>
+    <string name="bookorbit.status.connected">Připojeno k BookOrbit</string>
 </resources>

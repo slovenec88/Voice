@@ -268,6 +268,7 @@ class BottomSheetViewModelTest {
       viewModels = itemViewModels,
       repo = repo,
       serverAccount = serverAccount,
+      bookorbit = mockk { every { connection } returns kotlinx.coroutines.flow.flowOf(null) },
       serverDownloads = serverDownloads,
       navigator = navigator,
       playerController = playerController,

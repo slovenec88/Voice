@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Reprodue %1$s</string>
     <string name="widget.shelf.title">Sighi a ascurtare</string>
     <string name="widget.sleep_timer.stops_at">Si firmat a sas %1$s</string>
+
+    <string name="bookorbit.login.address.title">Connete BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice no agatat perunu serbidore BookOrbit in cussu indiritzu. Ses in sa rete giusta?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit depet èssere agiornadu.</string>
+    <string name="folder.add.action.bookorbit">Connete BookOrbit</string>
+    <string name="server.connection.other">Essi prima dae %s</string>
+    <string name="cloudflare.access.error">Controlla su token de Cloudflare Access e imprea s’indiritzu HTTPS finale.</string>
+    <string name="cloudflare.client.id">ID de su cliente</string>
+    <string name="cloudflare.client.secret">Segretu de su cliente</string>
+    <string name="bookorbit.status.connected">Connessione ativa cun BookOrbit</string>
 </resources>

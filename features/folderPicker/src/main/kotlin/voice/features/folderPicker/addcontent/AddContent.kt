@@ -52,5 +52,6 @@ fun AddContent(origin: Origin) {
     onHelpSurvey = viewModel::openHelpSurvey,
     onConnectAudiobookshelf =
       if (viewModel.canConnectAudiobookshelf) viewModel::connectAudiobookshelf else null,
+    onConnectBookOrbit = if (viewModel.canConnectBookOrbit) viewModel::connectBookOrbit else null,
   )
 }

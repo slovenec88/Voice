@@ -1,8 +1,9 @@
 package voice.core.audiobookshelf.sync
 
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -14,18 +15,22 @@ import voice.core.audiobookshelf.ServerReachability
 import voice.core.audiobookshelf.download.AudiobookshelfDownloads
 import voice.core.audiobookshelf.download.BookDownloadState
 import voice.core.data.BookId
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookRepository
+import voice.core.server.ServerProvider
 
-@ContributesBinding(AppScope::class)
+@ContributesIntoSet(AppScope::class, binding = binding<ServerProvider>())
 @Inject
 class AudiobookshelfServerLibrary
 internal constructor(
   private val audiobookshelfSync: AudiobookshelfSync,
   private val serverBookUpdate: ServerBookUpdate,
-  downloads: AudiobookshelfDownloads,
+  override val downloads: AudiobookshelfDownloads,
   bookRepository: BookRepository,
-) : ServerLibrary {
+) : ServerLibrary, ServerProvider {
+  override val scheme = "abs"
+  override val library: ServerLibrary
+    get() = this
 
   override val syncing: StateFlow<Boolean> = audiobookshelfSync.syncing
 
@@ -39,7 +44,9 @@ internal constructor(
       ) { reachability, downloadStates, books ->
         if (reachability != ServerReachability.Unreachable) return@combine emptySet()
         books
-          .filter { it.id.isRemote && downloadStates[it.id] !is BookDownloadState.Downloaded }
+          .filter {
+            it.id.isAudiobookshelf && downloadStates[it.id] !is BookDownloadState.Downloaded
+          }
           .map { it.id }
           .toSet()
       }

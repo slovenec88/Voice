@@ -13,6 +13,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import java.io.File
@@ -22,7 +23,7 @@ import kotlinx.coroutines.runBlocking
 import voice.core.audiobookshelf.account.AccountStore
 import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.audiobookshelf.trackRef
-import voice.core.playback.di.RemoteMediaDataSource
+import voice.core.server.RemoteMediaSource
 
 /**
  * The audio of server books. Their chapters point to `abs://` ids, which only turn into urls on the
@@ -78,7 +79,10 @@ internal class AudiobookshelfMedia(
 object AudiobookshelfMediaModule {
 
   @Provides
-  @RemoteMediaDataSource
-  private fun remoteMediaDataSourceFactory(media: AudiobookshelfMedia): DataSource.Factory =
-    media.playbackDataSourceFactory
+  @IntoSet
+  private fun remoteMediaDataSourceFactory(media: AudiobookshelfMedia): RemoteMediaSource =
+    object : RemoteMediaSource {
+      override val scheme = "abs"
+      override val factory = media.playbackDataSourceFactory
+    }
 }

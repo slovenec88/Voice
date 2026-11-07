@@ -21,8 +21,9 @@ import voice.core.data.Book
 import voice.core.data.BookContent
 import voice.core.data.Chapter
 import voice.core.data.CustomMetadata
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.repo.BookContentRepo
+import voice.core.data.repo.BookRepository
 import voice.core.data.repo.BookmarkRepo
 import voice.core.data.repo.ChapterRepo
 import voice.core.logging.api.Logger
@@ -34,6 +35,7 @@ private const val DETAILS_CHUNK_SIZE = 50
 internal class LibrarySync(
   private val http: AudiobookshelfHttp,
   private val contentRepo: BookContentRepo,
+  private val bookRepository: BookRepository,
   private val chapterRepo: ChapterRepo,
   private val bookmarkRepo: BookmarkRepo,
   private val context: Context,
@@ -52,7 +54,7 @@ internal class LibrarySync(
     val flagged =
       books.filter { it.isMissing || it.isInvalid }.map { AudiobookshelfIds.bookId(it.id) }.toSet()
 
-    val stored = contentRepo.all().filter { it.id.isRemote }.associateBy { it.id }
+    val stored = contentRepo.all().filter { it.id.isAudiobookshelf }.associateBy { it.id }
 
     val changed = items.filter { item ->
       val content = stored[AudiobookshelfIds.bookId(item.id)] ?: return@filter true
@@ -82,12 +84,12 @@ internal class LibrarySync(
     val onServer = items.map { AudiobookshelfIds.bookId(it.id) }.toSet()
     contentRepo
       .all()
-      .filter { it.id.isRemote }
+      .filter { it.id.isAudiobookshelf }
       .forEach { content ->
         if (content.id in flagged) return@forEach
         val active = content.id in onServer
         if (content.isActive != active) {
-          contentRepo.put(content.copy(isActive = active))
+          bookRepository.updateBook(content.id) { it.copy(isActive = active) }
         }
       }
 
@@ -122,20 +124,30 @@ internal class LibrarySync(
   private suspend fun store(item: AbsLibraryItem) {
     val chapters = item.chapters()
     if (chapters.isEmpty()) return
-    // read right before writing, so a pause or a seek during the requests isn't undone
     val existing = contentRepo.get(AudiobookshelfIds.bookId(item.id))
     val previousChapters = existing?.chapters?.mapNotNull { chapterRepo.get(it) }.orEmpty()
     chapters.forEach { chapterRepo.put(it) }
     val content = item.toBookContent(chapters, existing, previousChapters)
     // an update of the item can bring a new cover, so the next pass downloads it again
     val cover = existing?.metadata?.cover?.takeIf { it.name == coverFileName(item) }
-    if (cover == null) existing?.metadata?.cover?.delete()
     val updated = content.copy(metadata = content.metadata.copy(cover = cover))
     // the init block checks that the chapters and the position fit together
     @Suppress("RETURN_VALUE_NOT_USED") Book(updated, chapters, CustomMetadata(updated.id))
     // the book points at the new files right away, its bookmarks have to follow
     withContext(NonCancellable) {
-      contentRepo.put(updated)
+      var previousCover: File? = null
+      if (existing == null) {
+        contentRepo.put(updated)
+      } else {
+        bookRepository.updateBook(updated.id) { current ->
+          val currentCover = current.metadata.cover?.takeIf { it.name == coverFileName(item) }
+          if (currentCover == null) previousCover = current.metadata.cover
+          item.toBookContent(chapters, current, previousChapters).let {
+            it.copy(metadata = it.metadata.copy(cover = currentCover))
+          }
+        }
+      }
+      previousCover?.delete()
       if (existing != null) moveBookmarks(existing, previousChapters, chapters)
     }
   }
@@ -168,13 +180,14 @@ internal class LibrarySync(
     val itemsById = items.associateBy { it.id }
     contentRepo
       .all()
-      .filter { it.id.isRemote && it.isActive && it.metadata.cover?.exists() != true }
+      .filter { it.id.isAudiobookshelf && it.isActive && it.metadata.cover?.exists() != true }
       .forEach { content ->
         val item = content.id.itemId?.let(itemsById::get) ?: return@forEach
         if (item.media.coverPath == null) return@forEach
         val file = downloadCover(account, item) ?: return@forEach
-        val current = contentRepo.get(content.id) ?: return@forEach
-        contentRepo.put(current.copy(metadata = current.metadata.copy(cover = file)))
+        bookRepository.updateBook(content.id) { current ->
+          current.copy(metadata = current.metadata.copy(cover = file))
+        }
       }
   }
 

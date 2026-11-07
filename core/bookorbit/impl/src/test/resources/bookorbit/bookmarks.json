@@ -1,0 +1,22 @@
+[
+  {
+    "id": "d66ebdd5-2cbd-4406-9649-b79141f98282",
+    "bookId": 42,
+    "positionMs": 75000,
+    "chapterId": "ch_11111111111111111111111111111111",
+    "title": "First thought",
+    "note": "Keep this server-only note when Voice renames the bookmark.",
+    "createdAt": "2026-10-30T09:00:00.000Z",
+    "updatedAt": "2026-10-30T09:00:00.000Z"
+  },
+  {
+    "id": "d66ebdd5-2cbd-4406-9649-b79141f98283",
+    "bookId": 42,
+    "positionMs": 75000,
+    "chapterId": null,
+    "title": "A different thought at the same place",
+    "note": null,
+    "createdAt": "2026-10-30T09:00:01.000Z",
+    "updatedAt": "2026-10-30T09:00:01.000Z"
+  }
+]

@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Пушти %1$s</string>
     <string name="widget.shelf.title">Продолжи со слушање</string>
     <string name="widget.sleep_timer.stops_at">Запира во %1$s</string>
+
+    <string name="bookorbit.login.address.title">Поврзете го BookOrbit</string>
+    <string name="bookorbit.login.error.not_found">Voice не може да пристапи до BookOrbit сервер на таа адреса. Дали сте на вистинската мрежа?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit треба да се ажурира.</string>
+    <string name="folder.add.action.bookorbit">Поврзи го BookOrbit</string>
+    <string name="server.connection.other">Прво одјавете се од %s</string>
+    <string name="cloudflare.access.error">Проверете го токенот за Cloudflare Access и користете ја крајната HTTPS-адреса.</string>
+    <string name="cloudflare.client.id">ИД на клиент</string>
+    <string name="cloudflare.client.secret">Тајна на клиентот</string>
+    <string name="bookorbit.status.connected">Поврзано со BookOrbit</string>
 </resources>

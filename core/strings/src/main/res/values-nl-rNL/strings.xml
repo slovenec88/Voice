@@ -504,4 +504,14 @@
     <string name="widget.shelf.play">Speel %1$s af</string>
     <string name="widget.shelf.title">Verder luisteren</string>
     <string name="widget.sleep_timer.stops_at">Stopt om %1$s</string>
+
+    <string name="bookorbit.login.address.title">BookOrbit koppelen</string>
+    <string name="bookorbit.login.error.not_found">Voice kan daar geen BookOrbit-server bereiken. Zit je op het juiste netwerk?</string>
+    <string name="bookorbit.login.error.too_old">BookOrbit moet worden bijgewerkt.</string>
+    <string name="folder.add.action.bookorbit">BookOrbit koppelen</string>
+    <string name="server.connection.other">Meld je eerst af bij %s</string>
+    <string name="cloudflare.access.error">Controleer het Cloudflare Access-token en gebruik het uiteindelijke HTTPS-adres.</string>
+    <string name="cloudflare.client.id">Client-ID</string>
+    <string name="cloudflare.client.secret">Clientgeheim</string>
+    <string name="bookorbit.status.connected">Verbonden met BookOrbit</string>
 </resources>

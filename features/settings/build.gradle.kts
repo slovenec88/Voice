@@ -13,4 +13,5 @@ dependencies {
   implementation(projects.core.analytics.api)
   implementation(projects.core.documentfile)
   implementation(projects.core.audiobookshelf.api)
+  implementation(projects.core.bookorbit.api)
 }

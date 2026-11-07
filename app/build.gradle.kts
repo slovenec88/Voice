@@ -186,8 +186,13 @@ dependencies {
   implementation(projects.features.widget)
   implementation(projects.core.audiobookshelf.api)
   implementation(projects.core.audiobookshelf.impl)
+  implementation(projects.core.bookorbit.api)
+  implementation(projects.core.bookorbit.impl)
+  implementation(projects.core.server.api)
+  implementation(projects.core.server.impl)
   implementation(projects.core.foldersync)
   implementation(projects.features.audiobookshelf)
+  implementation(projects.features.bookorbit)
 
   implementation(libs.appCompat)
   implementation(libs.lifecycle.compose)

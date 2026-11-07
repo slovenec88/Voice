@@ -18,7 +18,7 @@ import voice.core.audiobookshelf.http.AudiobookshelfHttp
 import voice.core.audiobookshelf.itemId
 import voice.core.data.Book
 import voice.core.data.Bookmark
-import voice.core.data.isRemote
+import voice.core.data.isAudiobookshelf
 import voice.core.data.markForPosition
 import voice.core.data.repo.BookRepository
 import voice.core.data.repo.BookmarkRepo
@@ -44,7 +44,7 @@ internal class BookmarkSync(
     books: List<Book>? = null,
   ) = mutex.withLock {
     val api = http.authenticatedApi(account.serverUrl)
-    val remoteBooks = (books ?: bookRepository.all()).filter { it.id.isRemote }
+    val remoteBooks = (books ?: bookRepository.all()).filter { it.id.isAudiobookshelf }
     val serverByItem = serverBookmarks.groupBy { it.libraryItemId }
     val synced = syncedBookmarksStore.data.first().toMutableMap()
     try {
