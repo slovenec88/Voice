@@ -140,7 +140,9 @@ class BookOrbitLoginViewModel(
         }
         LoginResult.WrongCredentials ->
           state = current.copy(error = CredentialsError.WrongCredentials)
-        LoginResult.Unreachable -> state = current.copy(error = CredentialsError.Unreachable)
+        is LoginResult.Unreachable ->
+          state =
+            current.copy(error = CredentialsError.Unreachable, connectionErrorCode = result.reason)
         LoginResult.Failed -> state = current.copy(error = CredentialsError.Failed)
       }
     }

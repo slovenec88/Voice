@@ -199,9 +199,7 @@ internal constructor(
     if (!verified.passwordLogin) return LoginResult.Failed
     return try {
       val response =
-        http
-          .api(verified.url, verified.cloudflareAccess)
-          .login(LoginRequest(username.trim(), password))
+        http.login(verified.url, verified.cloudflareAccess, LoginRequest(username.trim(), password))
       if (
         response.accessToken.isBlank() ||
           response.refreshToken.isBlank() ||
@@ -227,8 +225,8 @@ internal constructor(
       )
     } catch (e: HttpException) {
       if (e.code() == 401 || e.code() == 403) LoginResult.WrongCredentials else LoginResult.Failed
-    } catch (_: IOException) {
-      LoginResult.Unreachable
+    } catch (failure: IOException) {
+      LoginResult.Unreachable(failure.javaClass.simpleName)
     } catch (_: SerializationException) {
       LoginResult.Failed
     }

@@ -1,11 +1,15 @@
 package voice.core.bookorbit.http
 
+import java.io.EOFException
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import javax.net.ssl.SSLHandshakeException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -26,12 +30,17 @@ import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
+import mockwebserver3.SocketEffect
 import okhttp3.Headers
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.tls.HandshakeCertificates
+import okhttp3.tls.HeldCertificate
 import org.junit.After
 import org.junit.Before
 import retrofit2.HttpException
+import voice.core.bookorbit.CloudflareAccess
 import voice.core.bookorbit.MemoryDataStore
 import voice.core.bookorbit.account.Account
 import voice.core.bookorbit.account.AccountStore
@@ -97,6 +106,171 @@ class BookOrbitHttpTest {
     assertEquals("Voice", body.getValue("deviceLabel").jsonPrimitive.content)
     assertEquals("listener", body.getValue("username").jsonPrimitive.content)
     assertEquals("password", body.getValue("password").jsonPrimitive.content)
+  }
+
+  @Test
+  fun `a broken fresh login connection retries once over HTTP1 with Cloudflare credentials`() =
+    runTest {
+      MockWebServer().use { tls ->
+        val trustedClient = tlsClient(tls)
+        val attempts = AtomicInteger()
+        val protocols = ConcurrentLinkedQueue<Protocol>()
+        val base =
+          trustedClient
+            .newBuilder()
+            .addInterceptor { chain ->
+              if (attempts.incrementAndGet() == 1) throw EOFException("connection closed")
+              chain.proceed(chain.request())
+            }
+            .addNetworkInterceptor { chain ->
+              protocols.add(chain.connection()!!.protocol())
+              chain.proceed(chain.request())
+            }
+            .build()
+        val http = BookOrbitHttp(AccountStore(accounts), base, ServerConnectionGate())
+        val access = CloudflareAccess("test-client", "test-secret")
+        tls.enqueue(MockResponse(code = 200, body = fixture("native-login")))
+
+        val response =
+          http.login(tls.url("/books/").toString(), access, LoginRequest("listener", "password"))
+
+        assertEquals(7L, response.user.id)
+        assertEquals(2, attempts.get())
+        assertEquals(listOf(Protocol.HTTP_1_1), protocols.toList())
+        assertTrue(Protocol.HTTP_2 in http.client.protocols)
+        val request = tls.takeRequest(1, TimeUnit.SECONDS)!!
+        assertEquals("/books/api/v1/auth/login", request.url.encodedPath)
+        assertEquals(access.clientId, request.headers["CF-Access-Client-Id"])
+        assertEquals(access.clientSecret, request.headers["CF-Access-Client-Secret"])
+        assertNull(request.headers["Authorization"])
+      }
+    }
+
+  @Test
+  fun `a reset HTTP2 login stream recovers on HTTP1 without losing Cloudflare headers`() = runTest {
+    MockWebServer().use { tls ->
+      val protocols = ConcurrentLinkedQueue<Protocol>()
+      val base =
+        tlsClient(tls)
+          .newBuilder()
+          .retryOnConnectionFailure(false)
+          .addNetworkInterceptor { chain ->
+            protocols.add(chain.connection()!!.protocol())
+            chain.proceed(chain.request())
+          }
+          .build()
+      val http = BookOrbitHttp(AccountStore(accounts), base, ServerConnectionGate())
+      val access = CloudflareAccess("test-client", "test-secret")
+      tls.enqueue(MockResponse.Builder().onResponseStart(SocketEffect.CloseStream(1)).build())
+      tls.enqueue(MockResponse(code = 200, body = fixture("native-login")))
+
+      val response =
+        http.login(tls.url("/books/").toString(), access, LoginRequest("listener", "password"))
+
+      assertEquals(7L, response.user.id)
+      assertEquals(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1), protocols.toList())
+      val requests = List(2) { tls.takeRequest(1, TimeUnit.SECONDS)!! }
+      assertTrue(requests.all { it.headers["CF-Access-Client-Id"] == access.clientId })
+      assertTrue(requests.all { it.headers["CF-Access-Client-Secret"] == access.clientSecret })
+      assertTrue(requests.all { it.url.encodedPath == "/books/api/v1/auth/login" })
+    }
+  }
+
+  @Test
+  fun `login recovery cannot follow a redirect with passwords or service credentials`() = runTest {
+    MockWebServer().use { tls ->
+      MockWebServer().use { other ->
+        other.start()
+        val attempts = AtomicInteger()
+        val base =
+          tlsClient(tls)
+            .newBuilder()
+            .addInterceptor { chain ->
+              if (attempts.incrementAndGet() == 1) throw EOFException("closed")
+              chain.proceed(chain.request())
+            }
+            .build()
+        val http = BookOrbitHttp(AccountStore(accounts), base, ServerConnectionGate())
+        tls.enqueue(
+          MockResponse(
+            code = 302,
+            headers = Headers.headersOf("Location", other.url("/collect").toString()),
+          ),
+        )
+
+        assertEquals(
+          302,
+          assertFailsWith<HttpException> {
+              http.login(
+                tls.url("/books/").toString(),
+                CloudflareAccess("test-client", "test-secret"),
+                LoginRequest("listener", "password"),
+              )
+            }
+            .code(),
+        )
+
+        assertEquals(0, other.requestCount)
+        assertEquals(1, tls.requestCount)
+      }
+    }
+  }
+
+  @Test
+  fun `fresh login does not retry certificate DNS or timeout failures`() = runTest {
+    for (failure in
+      listOf(
+        SSLHandshakeException("certificate"),
+        UnknownHostException("lookup"),
+        SocketTimeoutException("timeout"),
+      )) {
+      val attempts = AtomicInteger()
+      val base =
+        OkHttpClient.Builder()
+          .addInterceptor {
+            attempts.incrementAndGet()
+            throw failure
+          }
+          .build()
+      val http = BookOrbitHttp(AccountStore(accounts), base, ServerConnectionGate())
+
+      val caught =
+        assertFailsWith<IOException> {
+          http.login(account.serverUrl, null, LoginRequest("listener", "password"))
+        }
+
+      assertEquals(failure::class, caught::class)
+      assertEquals(failure.message, caught.message)
+      assertEquals(1, attempts.get())
+    }
+    assertEquals(0, server.requestCount)
+  }
+
+  @Test
+  fun `fresh login recovery is bounded and never retries rejected credentials`() = runTest {
+    val attempts = AtomicInteger()
+    val base =
+      OkHttpClient.Builder()
+        .addInterceptor {
+          attempts.incrementAndGet()
+          throw EOFException("connection closed")
+        }
+        .build()
+    val broken = BookOrbitHttp(AccountStore(accounts), base, ServerConnectionGate())
+    assertFailsWith<EOFException> {
+      broken.login(account.serverUrl, null, LoginRequest("listener", "password"))
+    }
+    assertEquals(2, attempts.get())
+
+    server.enqueue(MockResponse(code = 401))
+    assertEquals(
+      401,
+      assertFailsWith<HttpException> {
+          http().login(account.serverUrl, null, LoginRequest("listener", "wrong"))
+        }
+        .code(),
+    )
+    assertEquals(1, server.requestCount)
   }
 
   @Test
@@ -394,6 +568,22 @@ class BookOrbitHttpTest {
       assertEquals(0, server.requestCount)
       assertEquals(account, accounts.data.first())
     }
+
+  private fun tlsClient(server: MockWebServer): OkHttpClient {
+    val certificate =
+      HeldCertificate.Builder()
+        .commonName("localhost")
+        .addSubjectAlternativeName("localhost")
+        .build()
+    val serverCertificates = HandshakeCertificates.Builder().heldCertificate(certificate).build()
+    val trusted =
+      HandshakeCertificates.Builder().addTrustedCertificate(certificate.certificate).build()
+    server.useHttps(serverCertificates.sslSocketFactory())
+    server.start()
+    return OkHttpClient.Builder()
+      .sslSocketFactory(trusted.sslSocketFactory(), trusted.trustManager)
+      .build()
+  }
 
   private fun http() =
     BookOrbitHttp(

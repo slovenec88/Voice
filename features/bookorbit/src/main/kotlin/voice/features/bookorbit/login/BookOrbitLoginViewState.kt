@@ -24,6 +24,7 @@ internal sealed interface BookOrbitLoginViewState {
     val passwordLogin: Boolean = true,
     val busy: Boolean = false,
     val error: CredentialsError? = null,
+    val connectionErrorCode: String? = null,
   ) : BookOrbitLoginViewState
 
   data class Libraries(

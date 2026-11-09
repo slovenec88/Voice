@@ -6,6 +6,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.net.SocketTimeoutException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -228,6 +229,36 @@ class BookOrbitLoginTest {
     val found = assertIs<FindServerResult.Found>(bookOrbit.findServer(server.url("/").toString()))
 
     assertEquals(LoginResult.Failed, bookOrbit.login(found.server, "listener", "password"))
+  }
+
+  @Test
+  fun `login network failure exposes only its type and never the exception message`() = runTest {
+    enqueueDiscovery()
+    val base =
+      OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          if (chain.request().url.encodedPath.endsWith("/auth/login")) {
+            throw SocketTimeoutException("private-server-address listener password test-secret")
+          }
+          chain.proceed(chain.request())
+        }
+        .build()
+    val accounts = MemoryDataStore<Account?>(null)
+    val gate = ServerConnectionGate()
+    val bookOrbit =
+      bookOrbit(
+        accounts,
+        connectionGate = gate,
+        http = BookOrbitHttp(AccountStore(accounts), base, gate),
+      )
+    val found = assertIs<FindServerResult.Found>(bookOrbit.findServer(server.url("/").toString()))
+
+    val result =
+      assertIs<LoginResult.Unreachable>(bookOrbit.login(found.server, "listener", "password"))
+
+    assertEquals("SocketTimeoutException", result.reason)
+    assertNull(accounts.data.first())
+    assertEquals(4, server.requestCount)
   }
 
   @Test

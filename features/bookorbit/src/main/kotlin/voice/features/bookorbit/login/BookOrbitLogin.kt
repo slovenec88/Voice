@@ -398,7 +398,10 @@ private fun ColumnScope.CredentialsDetails(
                   CredentialsError.OtherAccount ->
                     StringsR.string.audiobookshelf_login_error_other_account
                 },
-              ),
+              ) +
+                if (error == CredentialsError.Unreachable && state.connectionErrorCode != null) {
+                  " [BO-LOGIN-${state.connectionErrorCode}]"
+                } else "",
           )
         }
       },

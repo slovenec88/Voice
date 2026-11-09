@@ -4,17 +4,22 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.io.IOException
+import java.io.InterruptedIOException
 import java.lang.reflect.Type
+import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import okhttp3.Authenticator
+import okhttp3.ConnectionPool
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody
@@ -27,6 +32,8 @@ import voice.core.bookorbit.CloudflareAccess
 import voice.core.bookorbit.account.Account
 import voice.core.bookorbit.account.AccountStore
 import voice.core.bookorbit.api.BookOrbitApi
+import voice.core.bookorbit.api.LoginRequest
+import voice.core.bookorbit.api.LoginResponse
 import voice.core.bookorbit.api.PlaybackState
 import voice.core.bookorbit.api.RefreshRequest
 import voice.core.bookorbit.bookOrbitJson
@@ -75,6 +82,30 @@ internal class BookOrbitHttp(
     serverUrl: String,
     access: CloudflareAccess? = null,
   ): BookOrbitApi = retrofit(serverUrl, clientFor(serverUrl, access))
+
+  suspend fun login(
+    serverUrl: String,
+    access: CloudflareAccess?,
+    request: LoginRequest,
+  ): LoginResponse =
+    try {
+      api(serverUrl, access).login(request)
+    } catch (failure: IOException) {
+      if (
+        failure is SSLException ||
+          failure is UnknownHostException ||
+          failure is InterruptedIOException
+      )
+        throw failure
+      val freshClient =
+        clientFor(serverUrl, access)
+          .newBuilder()
+          .connectionPool(ConnectionPool())
+          .protocols(listOf(Protocol.HTTP_1_1))
+          .retryOnConnectionFailure(false)
+          .build()
+      retrofit(serverUrl, freshClient).login(request)
+    }
 
   fun authenticatedApi(serverUrl: String): BookOrbitApi = retrofit(serverUrl, authenticatedClient)
 

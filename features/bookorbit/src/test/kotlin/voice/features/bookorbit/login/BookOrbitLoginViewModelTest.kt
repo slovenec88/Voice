@@ -201,6 +201,22 @@ class BookOrbitLoginViewModelTest {
     verify(exactly = 1) { navigator.goBack() }
   }
 
+  @Test
+  fun `a failed login retains the nonsecret connection error code for troubleshooting`() =
+    scope.runTest {
+      coEvery { bookOrbit.login(server, "listener", "secret") } returns
+        LoginResult.Unreachable("SocketTimeoutException")
+      val viewModel = credentials()
+
+      viewModel.onLogin()
+      runCurrent()
+
+      val state = assertIs<BookOrbitLoginViewState.Credentials>(viewModel.state)
+      assertEquals(CredentialsError.Unreachable, state.error)
+      assertEquals("SocketTimeoutException", state.connectionErrorCode)
+      assertFalse(state.busy)
+    }
+
   private fun credentials(origin: Origin = Origin.Default): BookOrbitLoginViewModel {
     val viewModel = viewModel(origin)
     viewModel.onAddressChange("books.example.org")

@@ -73,7 +73,7 @@ sealed interface LoginResult {
 
   data object WrongCredentials : LoginResult
 
-  data object Unreachable : LoginResult
+  data class Unreachable(val reason: String) : LoginResult
 
   data object Failed : LoginResult
 }
