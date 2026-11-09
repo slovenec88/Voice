@@ -23,6 +23,7 @@ import voice.core.bookorbit.BookOrbitServer
 import voice.core.bookorbit.CloudflareAccess
 import voice.core.bookorbit.FindServerResult
 import voice.core.bookorbit.LibrariesPreview
+import voice.core.bookorbit.LibrariesPreviewResult
 import voice.core.bookorbit.LoginResult
 import voice.core.bookorbit.PendingLogin
 import voice.core.common.DispatcherProvider
@@ -46,7 +47,8 @@ class BookOrbitLoginViewModelTest {
       coEvery { savedCloudflareAccess(any()) } returns null
       coEvery { login(server, "listener", "secret") } returns LoginResult.Success(pending)
       coEvery { connect(any(), any()) } returns true
-      coEvery { preview(pending) } returns this@BookOrbitLoginViewModelTest.preview
+      coEvery { preview(pending) } returns
+        LibrariesPreviewResult.Success(this@BookOrbitLoginViewModelTest.preview)
       every { connection } returns
         flowOf(BookOrbitConnection("https://books.example.org/", "listener", listOf("3"), true))
     }
@@ -75,16 +77,23 @@ class BookOrbitLoginViewModelTest {
   @Test
   fun `a failed library preview can be retried without another password submission`() =
     scope.runTest {
-      coEvery { bookOrbit.preview(pending) } returns null andThen preview
+      coEvery { bookOrbit.preview(pending) } returns
+        LibrariesPreviewResult.Failed("BO-BOOKS-HTTP400") andThen
+        LibrariesPreviewResult.Success(preview)
       val viewModel = credentials()
       viewModel.onLogin()
       runCurrent()
       assertTrue(assertIs<BookOrbitLoginViewState.Libraries>(viewModel.state).failed)
+      assertEquals(
+        "BO-BOOKS-HTTP400",
+        assertIs<BookOrbitLoginViewState.Libraries>(viewModel.state).errorCode,
+      )
 
       viewModel.onRetryLibraries()
       runCurrent()
 
       assertFalse(assertIs<BookOrbitLoginViewState.Libraries>(viewModel.state).failed)
+      assertEquals(null, assertIs<BookOrbitLoginViewState.Libraries>(viewModel.state).errorCode)
       coVerify(exactly = 1) {
         val _ = bookOrbit.login(any(), any(), any())
       }

@@ -13,6 +13,7 @@ import voice.core.bookorbit.BookOrbit
 import voice.core.bookorbit.BookOrbitServer
 import voice.core.bookorbit.CloudflareAccess
 import voice.core.bookorbit.FindServerResult
+import voice.core.bookorbit.LibrariesPreviewResult
 import voice.core.bookorbit.LoginResult
 import voice.core.bookorbit.PendingLogin
 import voice.core.common.DispatcherProvider
@@ -153,12 +154,14 @@ class BookOrbitLoginViewModel(
     serverName: String,
   ) {
     state = BookOrbitLoginViewState.Libraries(serverName = serverName, loading = true)
-    val preview = bookorbit.preview(login)
+    val result = bookorbit.preview(login)
+    val preview = (result as? LibrariesPreviewResult.Success)?.preview
     state =
       BookOrbitLoginViewState.Libraries(
         serverName = serverName,
         loading = false,
-        failed = preview == null,
+        failed = result is LibrariesPreviewResult.Failed,
+        errorCode = (result as? LibrariesPreviewResult.Failed)?.code,
         libraries =
           preview?.libraries.orEmpty().map { library ->
             LibraryViewState(

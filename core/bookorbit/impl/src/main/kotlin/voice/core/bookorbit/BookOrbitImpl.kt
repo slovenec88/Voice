@@ -232,7 +232,7 @@ internal constructor(
     }
   }
 
-  override suspend fun preview(login: PendingLogin): LibrariesPreview? =
+  override suspend fun preview(login: PendingLogin): LibrariesPreviewResult =
     preview(
       login.account,
       http.withToken(login.account),
@@ -241,17 +241,21 @@ internal constructor(
 
   override suspend fun libraries(): LibrariesPreview? {
     val account = accountStore.data.first() ?: return null
-    return preview(account, http.authenticatedApi(account), http.authenticatedClient)
+    return (preview(account, http.authenticatedApi(account), http.authenticatedClient)
+        as? LibrariesPreviewResult.Success)
+      ?.preview
   }
 
   private suspend fun preview(
     account: Account,
     api: BookOrbitApi,
     coverClient: OkHttpClient,
-  ): LibrariesPreview? =
+  ): LibrariesPreviewResult =
     withContext(Dispatchers.IO) {
+      var stage = "LIBRARIES"
       try {
         val libraries = api.libraries().filter { it.type == "books" }
+        stage = "BOOKS"
         val pages = libraries.associate { it.id to api.books(it.id, bookQuery(0, 8)) }
         val covers =
           pages.values
@@ -283,16 +287,18 @@ internal constructor(
                 null
               }
             }
-        LibrariesPreview(
-          libraries.map { BookOrbitLibrary(it.id.toString(), it.name, pages[it.id]?.total ?: 0) },
-          covers,
+        LibrariesPreviewResult.Success(
+          LibrariesPreview(
+            libraries.map { BookOrbitLibrary(it.id.toString(), it.name, pages[it.id]?.total ?: 0) },
+            covers,
+          ),
         )
-      } catch (_: IOException) {
-        null
-      } catch (_: HttpException) {
-        null
+      } catch (failure: IOException) {
+        LibrariesPreviewResult.Failed("BO-$stage-${failure.javaClass.simpleName}")
+      } catch (failure: HttpException) {
+        LibrariesPreviewResult.Failed("BO-$stage-HTTP${failure.code()}")
       } catch (_: SerializationException) {
-        null
+        LibrariesPreviewResult.Failed("BO-$stage-JSON")
       }
     }
 

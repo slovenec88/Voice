@@ -371,9 +371,10 @@ class BookOrbitLoginTest {
     enqueuePreview()
 
     val preview =
-      assertNotNull(
-        bookOrbit(accounts, context = previewContext()).preview(BookOrbitLogin(account)),
-      )
+      assertIs<LibrariesPreviewResult.Success>(
+          bookOrbit(accounts, context = previewContext()).preview(BookOrbitLogin(account)),
+        )
+        .preview
 
     assertEquals(1, preview.covers.size)
     assertNull(accounts.data.first())
@@ -403,6 +404,82 @@ class BookOrbitLoginTest {
     assertEquals(0, preview.covers.size)
     assertEquals(2, server.requestCount)
     assertEquals(replacement, accounts.data.first())
+  }
+
+  @Test
+  fun `preview distinguishes rejected library and catalog requests without exposing response bodies`() =
+    runTest {
+      val account = testAccount(server.url("/").toString())
+      val bookOrbit = bookOrbit(context = previewContext())
+      server.enqueue(MockResponse(code = 403, body = "private server detail"))
+      assertEquals(
+        LibrariesPreviewResult.Failed("BO-LIBRARIES-HTTP403"),
+        bookOrbit.preview(BookOrbitLogin(account)),
+      )
+      server.enqueue(MockResponse(code = 200, body = previewLibraries()))
+      server.enqueue(MockResponse(code = 400, body = "private book detail"))
+      assertEquals(
+        LibrariesPreviewResult.Failed("BO-BOOKS-HTTP400"),
+        bookOrbit.preview(BookOrbitLogin(account)),
+      )
+    }
+
+  @Test
+  fun `preview distinguishes invalid library and catalog responses`() = runTest {
+    val account = testAccount(server.url("/").toString())
+    val bookOrbit = bookOrbit(context = previewContext())
+    server.enqueue(MockResponse(code = 200, body = """[{"id":"private invalid id"}]"""))
+    assertEquals(
+      LibrariesPreviewResult.Failed("BO-LIBRARIES-JSON"),
+      bookOrbit.preview(BookOrbitLogin(account)),
+    )
+    server.enqueue(MockResponse(code = 200, body = previewLibraries()))
+    server.enqueue(MockResponse(code = 200, body = """{"items":[{"id":"private invalid id"}]}"""))
+    assertEquals(
+      LibrariesPreviewResult.Failed("BO-BOOKS-JSON"),
+      bookOrbit.preview(BookOrbitLogin(account)),
+    )
+  }
+
+  @Test
+  fun `fresh login previews libraries through Cloudflare before account enrollment`() = runTest {
+    MockWebServer().use { secure ->
+      val accounts = MemoryDataStore<Account?>(null)
+      val gate = ServerConnectionGate()
+      val http = secure.startTlsClient(accounts, gate)
+      secure.enqueueDiscovery()
+      secure.enqueue(MockResponse(code = 200, body = fixture("native-login")))
+      secure.enqueue(MockResponse(code = 200, body = previewLibraries()))
+      secure.enqueue(MockResponse(code = 200, body = previewPage()))
+      secure.enqueue(
+        MockResponse(
+          code = 200,
+          headers = Headers.headersOf("Content-Type", "image/png"),
+          body = "image bytes",
+        ),
+      )
+      val access = CloudflareAccess("test-id", "test-secret")
+      val bookOrbit =
+        bookOrbit(accounts, connectionGate = gate, context = previewContext(), http = http)
+      val found =
+        assertIs<FindServerResult.Found>(bookOrbit.findServer(secure.url("/").toString(), access))
+      val login =
+        assertIs<LoginResult.Success>(bookOrbit.login(found.server, "listener", "password"))
+
+      val result = assertIs<LibrariesPreviewResult.Success>(bookOrbit.preview(login.login))
+
+      assertEquals(1, result.preview.libraries.single().bookCount)
+      assertEquals(1, result.preview.covers.size)
+      assertNull(accounts.data.first())
+      val requests = List(8) { secure.takeRequest() }
+      assertTrue(
+        requests.all {
+          it.headers["CF-Access-Client-Id"] == access.clientId &&
+            it.headers["CF-Access-Client-Secret"] == access.clientSecret
+        },
+      )
+      assertTrue(requests.takeLast(3).all { it.headers["Authorization"] == "Bearer access-one" })
+    }
   }
 
   private fun previewContext() = mockk<Context> { every { cacheDir } returns temporary.root }

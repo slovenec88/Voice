@@ -18,7 +18,7 @@ interface BookOrbit {
 
   suspend fun login(server: BookOrbitServer, username: String, password: String): LoginResult
 
-  suspend fun preview(login: PendingLogin): LibrariesPreview?
+  suspend fun preview(login: PendingLogin): LibrariesPreviewResult
 
   suspend fun libraries(): LibrariesPreview?
 
@@ -88,3 +88,9 @@ data class LibrariesPreview(
   val libraries: List<BookOrbitLibrary>,
   val covers: List<File>,
 )
+
+sealed interface LibrariesPreviewResult {
+  data class Success(val preview: LibrariesPreview) : LibrariesPreviewResult
+
+  data class Failed(val code: String) : LibrariesPreviewResult
+}

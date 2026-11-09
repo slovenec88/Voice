@@ -35,6 +35,7 @@ internal sealed interface BookOrbitLoginViewState {
     val busy: Boolean = false,
     /** The server didn't answer with its libraries. */
     val failed: Boolean = false,
+    val errorCode: String? = null,
     val blockedByOtherProvider: Boolean = false,
   ) : BookOrbitLoginViewState {
     val bookCount: Int

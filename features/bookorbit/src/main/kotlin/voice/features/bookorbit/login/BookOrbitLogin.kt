@@ -202,7 +202,9 @@ private fun BookOrbitLogin(
                 state.bookCount,
               )
           },
-        subtitle = stringResource(StringsR.string.audiobookshelf_login_libraries_subtitle),
+        subtitle =
+          state.errorCode?.let { "[$it]" }
+            ?: stringResource(StringsR.string.audiobookshelf_login_libraries_subtitle),
         hero = { clock ->
           if (state.covers.isEmpty()) {
             ServerHero(clock = clock, modifier = Modifier.fillMaxSize())
