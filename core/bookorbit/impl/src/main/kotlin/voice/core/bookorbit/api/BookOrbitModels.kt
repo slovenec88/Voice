@@ -56,7 +56,6 @@ internal data class NativeTokens(
 internal data class BoLibrary(
   val id: Long,
   val name: String,
-  val type: String,
 )
 
 @Serializable

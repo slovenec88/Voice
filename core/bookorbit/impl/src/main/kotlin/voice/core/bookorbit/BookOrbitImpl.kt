@@ -254,7 +254,7 @@ internal constructor(
     withContext(Dispatchers.IO) {
       var stage = "LIBRARIES"
       try {
-        val libraries = api.libraries().filter { it.type == "books" }
+        val libraries = api.libraries()
         stage = "BOOKS"
         val pages = libraries.associate { it.id to api.books(it.id, bookQuery(0, 8)) }
         val covers =

@@ -53,7 +53,7 @@ class BookOrbitApiTest {
   fun `catalog uses a bare library list and a paged audio query under the server subdirectory`() =
     runTest {
       server.enqueue(
-        MockResponse(code = 200, body = """[{"id":3,"name":"Books","type":"books"}]"""),
+        MockResponse(code = 200, body = fixture("libraries")),
       )
       server.enqueue(
         MockResponse(

@@ -484,7 +484,7 @@ class BookOrbitLoginTest {
 
   private fun previewContext() = mockk<Context> { every { cacheDir } returns temporary.root }
 
-  private fun previewLibraries() = """[{"id":3,"name":"Books","type":"books"}]"""
+  private fun previewLibraries() = fixture("libraries")
 
   private fun previewPage() =
     """{"items":[{"id":42,"files":[{"id":101,"format":"mp3","role":"content"}],"hasCover":true}],"total":1,"page":0,"size":8}"""

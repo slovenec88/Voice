@@ -1,0 +1,20 @@
+[
+  {
+    "id": 3,
+    "accessLevel": "viewer",
+    "name": "Books",
+    "icon": null,
+    "displayOrder": 0,
+    "coverAspectRatio": "1/1",
+    "watch": false,
+    "autoScanCronExpression": null,
+    "organizationMode": "book_per_folder",
+    "scanMode": "auto",
+    "fileWriteEnabled": false,
+    "fileRenameEnabled": false,
+    "createdAt": "2026-11-01T10:00:00.000Z",
+    "updatedAt": "2026-11-01T10:00:00.000Z",
+    "bookCount": 12,
+    "folders": []
+  }
+]
